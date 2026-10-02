@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TapNova</title>
+
+    <style>
+        body {
+            background: #07111f;
+            color: white;
+            text-align: center;
+            font-family: Arial;
+            padding-top: 40px;
+        }
+
+        h1 {
+            font-size: 35px;
+        }
+
+        #coins {
+            font-size: 45px;
+            font-weight: bold;
+            margin: 30px;
+        }
+
+        button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: #087cff;
+            color: white;
+            border: 8px solid #42a5ff;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🚀 TapNova</h1>
+
+    <p>Tap • Earn • Upgrade</p>
+
+    <div id="coins">💰 0</div>
+
+    <button onclick="tap()">👆 TAP</button>
+
+    <p>⚡ Energy: <span id="energy">100</span>/100</p>
+
+    <script>
+        let coins = 0;
+        let energy = 100;
+
+        function tap() {
+            if (energy > 0) {
+                coins = coins + 1;
+                energy = energy - 1;
+
+                document.getElementById("coins").innerText = "💰 " + coins;
+                document.getElementById("energy").innerText = energy;
+            }
+        }
+    </script>
+
+</body>
+</html>
