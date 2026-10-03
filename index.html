@@ -5,17 +5,17 @@ html
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TapNova</title>
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org"></script>
     <style>
         body {
             background-color: #1a1a1a;
             color: #ffffff;
-            font-family: 'Arial', sans-serif;
+            font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
             padding: 20px;
             user-select: none;
+            -webkit-user-select: none;
         }
         h1 { color: #f39c12; margin-bottom: 5px; }
         .welcome-text { font-size: 16px; color: #aaa; margin-bottom: 20px; }
@@ -55,63 +55,58 @@ html
     </div>
 
     <script>
-        // १. Telegram WebApp Initialization
-        const tg = window.Telegram.WebApp;
-        
-        // सुरक्षित तरिकाले टेलिग्राम कल गर्ने
+        // Initialize Telegram WebApp safely
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
         if (tg) {
             tg.ready();
             tg.expand();
         }
 
-        // २. User ID सेट गर्ने (यदि टेलिग्राम छैन भने 'local_test_user' बन्नेछ)
+        // Setup User ID
         let userId = "tapnova_local_user"; 
-        
         if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const user = tg.initDataUnsafe.user;
-            userId = `tapnova_user_${user.id}`;
-            document.getElementById("welcomeUser").innerText = `Welcome, ${user.first_name}!`;
+            userId = "tapnova_user_" + tg.initDataUnsafe.user.id;
+            document.getElementById("welcomeUser").innerText = "Welcome, " + tg.initDataUnsafe.user.first_name + "!";
         } else {
-            document.getElementById("welcomeUser").innerText = "Welcome, Browser Tester!";
+            document.getElementById("welcomeUser").innerText = "Welcome, Tester!";
         }
 
-        // ३. डाटा लोड गर्ने फङ्सन
+        // Default stats
         let userStats = { coins: 0, energy: 100 };
-        
+
+        // Load data safely
         try {
             const savedData = localStorage.getItem(userId);
             if (savedData) {
                 userStats = JSON.parse(savedData);
             }
         } catch (e) {
-            console.log("Error loading storage", e);
+            console.error("Storage load error", e);
         }
 
-        // UI अपडेट गर्ने फङ्सन
+        // Update UI Function
         function updateUI() {
             document.getElementById("coinsDisplay").innerText = userStats.coins;
             document.getElementById("energyDisplay").innerText = userStats.energy;
         }
 
-        // डाटा सेभ गर्ने फङ्सन
+        // Save Data Function
         function saveData() {
             try {
                 localStorage.setItem(userId, JSON.stringify(userStats));
             } catch (e) {
-                console.log("Error saving storage", e);
+                console.error("Storage save error", e);
             }
         }
 
-        // ४. Tap गर्दा काम गर्ने मुख्य Setup
-        const tapButton = document.getElementById("tapButton");
-        tapButton.addEventListener("click", () => {
+        // Tap Event
+        document.getElementById("tapButton").onclick = function() {
             if (userStats.energy > 0) {
-                userStats.coins += 1;   // १ कोइन बढाउने
-                userStats.energy -= 1;  // १ इनर्जी घटाउने
+                userStats.coins += 1;
+                userStats.energy -= 1;
                 updateUI();
                 saveData();
                 
-                // टेलिग्राम भित्र भए हल्का भाइब्रेट गराउने
                 if (tg && tg.HapticFeedback) {
                     tg.HapticFeedback.impactOccurred('medium');
                 }
@@ -119,12 +114,12 @@ html
                 if (tg && tg.HapticFeedback) {
                     tg.HapticFeedback.notificationOccurred('error');
                 }
-                alert("Energy सकियो! कृपया रिचार्ज हुन दिनुहोस्।");
+                alert("Out of Energy! Please wait for recharge.");
             }
-        });
+        };
 
-        // ५. Energy आफै रिचार्ज हुने (हरेक १ सेकेन्डमा +१ इनर्जी)
-        setInterval(() => {
+        // Energy Recharge (Every 1 second)
+        setInterval(function() {
             if (userStats.energy < 100) {
                 userStats.energy += 1;
                 updateUI();
@@ -132,7 +127,7 @@ html
             }
         }, 1000);
 
-        // सुरुमा गेम लोड हुँदा UI देखाउने
+        // Initial UI Load
         updateUI();
     </script>
 </body>
