@@ -1,71 +1,117 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TapNova</title>
-
+    <!-- Telegram WebApp SDK थपिएको छ -->
+    <script src="https://telegram.org"></script>
     <style>
         body {
-            background: #07111f;
-            color: white;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
             text-align: center;
-            font-family: Arial;
-            padding-top: 40px;
+            margin: 0;
+            padding: 20px;
+            user-select: none;
         }
-
-        h1 {
-            font-size: 35px;
-        }
-
-        #coins {
-            font-size: 45px;
-            font-weight: bold;
-            margin: 30px;
-        }
-
-        button {
+        h1 { color: #f39c12; margin-bottom: 5px; }
+        .welcome-text { font-size: 16px; color: #aaa; margin-bottom: 20px; }
+        .score-container { font-size: 32px; font-weight: bold; margin: 20px 0; }
+        .tap-btn {
+            background: radial-gradient(circle, #f1c40f, #f39c12);
+            border: none;
+            border-radius: 50%;
             width: 200px;
             height: 200px;
-            border-radius: 50%;
-            background: #087cff;
-            color: white;
-            border: 8px solid #42a5ff;
-            font-size: 30px;
+            font-size: 24px;
             font-weight: bold;
+            color: white;
             cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
         }
-
-        button:active {
-            transform: scale(0.95);
-        }
+        .tap-btn:active { transform: scale(0.95); }
+        .energy-container { font-size: 18px; margin-top: 20px; color: #2ecc71; }
     </style>
 </head>
-
 <body>
 
     <h1>🚀 TapNova</h1>
-
+    <!-- यहाँ प्रतेक User को नाम देखाउनेछ -->
+    <div class="welcome-text" id="welcomeUser">Welcome, Player!</div>
     <p>Tap • Earn • Upgrade</p>
 
-    <div id="coins">💰 0</div>
+    <div class="score-container">
+        💰 <span id="coinsDisplay">0</span>
+    </div>
 
-    <button onclick="tap()">👆 TAP</button>
+    <button class="tap-btn" id="tapButton">👆 TAP</button>
 
-    <p>⚡ Energy: <span id="energy">100</span>/100</p>
+    <div class="energy-container">
+        ⚡ Energy: <span id="energyDisplay">100</span>/100
+    </div>
 
     <script>
-        let coins = 0;
-        let energy = 100;
+        // १. Telegram WebApp Initialization
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // गेम स्क्रिन पुरा खोल्ने
 
-        function tap() {
-            if (energy > 0) {
-                coins = coins + 1;
-                energy = energy - 1;
-
-                document.getElementById("coins").innerText = "💰 " + coins;
-                document.getElementById("energy").innerText = energy;
-            }
+        // २. User पहिचान गर्ने (Unique Key को लागि Telegram User ID लिने)
+        const user = tg.initDataUnsafe?.user;
+        let userId = "guest_user"; 
+        
+        if (user) {
+            userId = `tapnova_user_${user.id}`;
+            document.getElementById("welcomeUser").innerText = `Welcome, ${user.first_name}!`;
+        } else {
+            document.getElementById("welcomeUser").innerText = "Welcome, Guest! (Open in Telegram)";
         }
-    </script>
 
+        // ३. प्रतेक User को डाटा लोड गर्ने (Unique User ID को आधारमा)
+        let userStats = JSON.parse(localStorage.getItem(userId)) || {
+            coins: 0,
+            energy: 100
+        };
+
+        // UI मा डाटा अपडेट गर्ने फङ्सन
+        function updateUI() {
+            document.getElementById("coinsDisplay").innerText = userStats.coins;
+            document.getElementById("energyDisplay").innerText = userStats.energy;
+        }
+
+        // डाटा सेभ गर्ने फङ्सन
+        function saveData() {
+            localStorage.setItem(userId, JSON.stringify(userStats));
+        }
+
+        // ४. Tap गर्दा कोइन बढ्ने र Energy घट्ने Setup
+        const tapButton = document.getElementById("tapButton");
+        tapButton.addEventListener("click", () => {
+            if (userStats.energy > 0) {
+                userStats.coins += 1;   // १ कोइन थपिने
+                userStats.energy -= 1;  // १ इनर्जी घट्ने
+                updateUI();
+                saveData();
+            } else {
+                tg.HapticFeedback.notificationOccurred('error'); // इनर्जी सकिँदा भाइब्रेट हुने
+                alert("Out of energy! Wait for it to recharge.");
+            }
+        });
+
+        // ५. Energy आफै रिचार्ज हुने Setup (हरेक १ सेकेन्डमा १ इनर्जी बढ्ने)
+        setInterval(() => {
+            if (userStats.energy < 100) {
+                userStats.energy += 1;
+                updateUI();
+                saveData();
+            }
+        }, 1000);
+
+        // सुरुमा UI लोड गर्ने
+        updateUI();
+    </script>
 </body>
 </html>
