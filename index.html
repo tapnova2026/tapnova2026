@@ -1,10 +1,11 @@
+html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TapNova</title>
-    <!-- Telegram WebApp SDK थपिएको छ -->
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org"></script>
     <style>
         body {
@@ -31,6 +32,7 @@
             cursor: pointer;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
             transition: transform 0.1s;
+            outline: none;
         }
         .tap-btn:active { transform: scale(0.95); }
         .energy-container { font-size: 18px; margin-top: 20px; color: #2ecc71; }
@@ -39,7 +41,6 @@
 <body>
 
     <h1>🚀 TapNova</h1>
-    <!-- यहाँ प्रतेक User को नाम देखाउनेछ -->
     <div class="welcome-text" id="welcomeUser">Welcome, Player!</div>
     <p>Tap • Earn • Upgrade</p>
 
@@ -56,27 +57,37 @@
     <script>
         // १. Telegram WebApp Initialization
         const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand(); // गेम स्क्रिन पुरा खोल्ने
-
-        // २. User पहिचान गर्ने (Unique Key को लागि Telegram User ID लिने)
-        const user = tg.initDataUnsafe?.user;
-        let userId = "guest_user"; 
         
-        if (user) {
+        // सुरक्षित तरिकाले टेलिग्राम कल गर्ने
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        // २. User ID सेट गर्ने (यदि टेलिग्राम छैन भने 'local_test_user' बन्नेछ)
+        let userId = "tapnova_local_user"; 
+        
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
             userId = `tapnova_user_${user.id}`;
             document.getElementById("welcomeUser").innerText = `Welcome, ${user.first_name}!`;
         } else {
-            document.getElementById("welcomeUser").innerText = "Welcome, Guest! (Open in Telegram)";
+            document.getElementById("welcomeUser").innerText = "Welcome, Browser Tester!";
         }
 
-        // ३. प्रतेक User को डाटा लोड गर्ने (Unique User ID को आधारमा)
-        let userStats = JSON.parse(localStorage.getItem(userId)) || {
-            coins: 0,
-            energy: 100
-        };
+        // ३. डाटा लोड गर्ने फङ्सन
+        let userStats = { coins: 0, energy: 100 };
+        
+        try {
+            const savedData = localStorage.getItem(userId);
+            if (savedData) {
+                userStats = JSON.parse(savedData);
+            }
+        } catch (e) {
+            console.log("Error loading storage", e);
+        }
 
-        // UI मा डाटा अपडेट गर्ने फङ्सन
+        // UI अपडेट गर्ने फङ्सन
         function updateUI() {
             document.getElementById("coinsDisplay").innerText = userStats.coins;
             document.getElementById("energyDisplay").innerText = userStats.energy;
@@ -84,24 +95,35 @@
 
         // डाटा सेभ गर्ने फङ्सन
         function saveData() {
-            localStorage.setItem(userId, JSON.stringify(userStats));
+            try {
+                localStorage.setItem(userId, JSON.stringify(userStats));
+            } catch (e) {
+                console.log("Error saving storage", e);
+            }
         }
 
-        // ४. Tap गर्दा कोइन बढ्ने र Energy घट्ने Setup
+        // ४. Tap गर्दा काम गर्ने मुख्य Setup
         const tapButton = document.getElementById("tapButton");
         tapButton.addEventListener("click", () => {
             if (userStats.energy > 0) {
-                userStats.coins += 1;   // १ कोइन थपिने
-                userStats.energy -= 1;  // १ इनर्जी घट्ने
+                userStats.coins += 1;   // १ कोइन बढाउने
+                userStats.energy -= 1;  // १ इनर्जी घटाउने
                 updateUI();
                 saveData();
+                
+                // टेलिग्राम भित्र भए हल्का भाइब्रेट गराउने
+                if (tg && tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('medium');
+                }
             } else {
-                tg.HapticFeedback.notificationOccurred('error'); // इनर्जी सकिँदा भाइब्रेट हुने
-                alert("Out of energy! Wait for it to recharge.");
+                if (tg && tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+                alert("Energy सकियो! कृपया रिचार्ज हुन दिनुहोस्।");
             }
         });
 
-        // ५. Energy आफै रिचार्ज हुने Setup (हरेक १ सेकेन्डमा १ इनर्जी बढ्ने)
+        // ५. Energy आफै रिचार्ज हुने (हरेक १ सेकेन्डमा +१ इनर्जी)
         setInterval(() => {
             if (userStats.energy < 100) {
                 userStats.energy += 1;
@@ -110,7 +132,7 @@
             }
         }, 1000);
 
-        // सुरुमा UI लोड गर्ने
+        // सुरुमा गेम लोड हुँदा UI देखाउने
         updateUI();
     </script>
 </body>
