@@ -68,7 +68,7 @@
       <div class="row"><span>Address</span><span class="muted" id="walletAddress">—</span></div>
     </div>
     <div class="card"><div class="title">⛓️ Blockchain Join Fee</div>
-      <div class="muted">Join fee: <b id="feeLabel">0.1 TON</b></div><br>
+      <div class="muted">Join fee: <b id="feeLabel">0.25 TON</b></div><br>
       <button class="btn primary" id="payBtn">Pay Join Fee</button>
       <p class="muted">The final recipient wallet must be configured by the project owner before mainnet use.</p>
     </div>
@@ -108,7 +108,17 @@ const LEVELS=[
  {name:"Legend",min:50000000},
  {name:"Nova Master",min:150000000}
 ];
+<div class="row">
+  <span>Next milestone</span>
+  <b id="nextRef">1 referral</b>
+</div>
 
+<div class="row">
+  <span>Referral Level</span>
+  <b id="refLevel">Starter</b>
+</div>
+
+<div id="refMilestones"></div>
 const TASKS=[
  {id:"daily_tap",name:"Daily Tap Bonus",reward:100,desc:"Tap at least 20 times today"},
  {id:"telegram",name:"Join Telegram Community",reward:250,desc:"Community task — verify before production"},
@@ -163,10 +173,49 @@ function renderLevels(){
  document.getElementById("levelList").innerHTML=LEVELS.map((l,i)=>`<div class="row"><div><b>${i+1}. ${l.name}</b><div class="muted">${l.min.toLocaleString()} volume required</div></div><span class="pill">${i===levelIndex()?"CURRENT":i<levelIndex()?"✓":"LOCKED"}</span></div>`).join("");
 }
 function renderReferral(){
- const base=location.origin+location.pathname;
- const code=tgUser?.id||userId;
- const link=`${base}?startapp=ref_${code}`;
- document.getElementById("refLink").textContent=link;
+  const base=location.origin+location.pathname;
+  const code=tgUser?.id||userId;
+  const link=`${base}?startapp=ref_${code}`;
+
+  document.getElementById("refLink").textContent=link;
+  document.getElementById("refCount").textContent=stats.referrals;
+  document.getElementById("refBonus").textContent=
+    stats.refBonus.toLocaleString();
+
+  let current=null;
+  let next=null;
+
+  REFERRAL_LEVELS.forEach(level=>{
+    if(stats.referrals>=level.count){
+      current=level;
+    }else if(!next){
+      next=level;
+    }
+  });
+
+  document.getElementById("refLevel").textContent =
+    current ? `${current.icon} ${current.name}` : "Starter";
+
+  document.getElementById("nextRef").textContent =
+    next ? `${next.count} referrals (${next.count-stats.referrals} more)` : "MAX";
+
+  document.getElementById("refMilestones").innerHTML =
+    REFERRAL_LEVELS.map(level=>{
+      const completed=stats.referrals>=level.count;
+
+      return `
+        <div class="row">
+          <span>
+            ${level.icon} ${level.name}
+            <div class="muted">${level.count} referrals</div>
+          </span>
+          <b class="${completed?'ok':'muted'}">
+            ${completed?'✓ ':''}+${level.bonus.toLocaleString()} TNV
+          </b>
+        </div>
+      `;
+    }).join("");
+}
 }
 function shareReferral(){
  const link=document.getElementById("refLink").textContent;
