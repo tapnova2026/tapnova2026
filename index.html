@@ -112,7 +112,7 @@ const LEVELS=[
 const TASKS=[
  {id:"daily_tap",name:"Daily Tap Bonus",reward:100,desc:"Tap at least 20 times today"},
  {id:"telegram",name:"Join Telegram Community",reward:250,desc:"Community task — verify before production"},
- {id:"referral",name:"Invite 1 Friend",reward:500,desc:"Bring one new active user"},
+ {id:"referral",name:"Invite Friends",reward:500,desc:"Reach referral milestones: 1, 5, 10 and 20 friends"},
  {id:"wallet",name:"Connect TON Wallet",reward:300,desc:"Connect a supported TON wallet"},
 ];
 
@@ -207,7 +207,7 @@ try{
 
 document.getElementById("payBtn").onclick=async()=>{
  if(!tonUI?.wallet)return alert("Please connect your TON wallet first.");
- const recipient="REPLACE_WITH_PROJECT_TON_WALLET";
+const recipient="UQAbrZTySlI0f0km5LJkGfSndWhCOchOJfa9PPAhiyQdb9lF";
  if(recipient.startsWith("REPLACE"))return alert("Project owner wallet address is not configured yet.");
  try{
   await tonUI.sendTransaction({
