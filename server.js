@@ -28,6 +28,7 @@ const AIRDROP_RISK_MAX=Number(process.env.AIRDROP_RISK_MAX||80);
 const AIRDROP_MIN_SCORE=Number(process.env.AIRDROP_MIN_SCORE||1);
 const AIRDROP_CLAIM_REQUIRE_JOINED=String(process.env.AIRDROP_CLAIM_REQUIRE_JOINED||'false').toLowerCase()==='true';
 const AIRDROP_TOKEN_SYMBOL=process.env.AIRDROP_TOKEN_SYMBOL||'TNV';
+const TON_MAINNET='-239';
 
 const CARDS={
  starter:{price:1000,pph:5,max:5},
@@ -47,6 +48,7 @@ async function initDatabase(){
  await pool.query(schema);
 }
 
+app.set('trust proxy',1);
 app.use(helmet({contentSecurityPolicy:false}));
 app.use(cors({origin:(origin,cb)=>{if(!origin||!isProd)return cb(null,true);return cb(null,origin===APP_URL);},credentials:false}));
 app.use(express.json({limit:'100kb'}));
@@ -182,8 +184,9 @@ app.post('/api/tasks/:id/claim',async(req,res)=>{
 });
 
 app.post('/api/wallet/link',async(req,res)=>{
- const address=String(req.body?.address||'').trim();if(!address||address.length<20||address.length>128)return res.status(400).json({error:'invalid_wallet_address'});
- const c=await pool.connect();try{const u=await getUser(c,req.tgUser.id,req.tgUser);await c.query('UPDATE users SET wallet_address=$2,updated_at=NOW() WHERE telegram_id=$1',[u.telegram_id,address]);res.json({ok:true,address});}finally{c.release();}
+ const supplied=String(req.body?.address||'').trim();
+ let address='';try{address=Address.parse(supplied).toString({bounceable:true,testOnly:false,urlSafe:true});}catch{return res.status(400).json({error:'invalid_wallet_address'});}
+ const c=await pool.connect();try{const u=await getUser(c,req.tgUser.id,req.tgUser);await c.query('UPDATE users SET wallet_address=$2,updated_at=NOW() WHERE telegram_id=$1',[u.telegram_id,address]);res.json({ok:true,address,rawAddress:Address.parse(address).toRawString()});}finally{c.release();}
 });
 
 app.post('/api/cards/:id/buy',async(req,res)=>{
@@ -279,7 +282,16 @@ app.post('/api/admin/airdrop/snapshot',async(req,res)=>{const denied=adminGuard(
 app.get('/api/admin/airdrop/:id',async(req,res)=>{const denied=adminGuard(req,res);if(denied)return;const c=await pool.connect();try{const s=await c.query('SELECT * FROM airdrop_snapshots WHERE id=$1',[req.params.id]);if(!s.rowCount)return res.status(404).json({error:'snapshot_not_found'});const a=await c.query('SELECT telegram_id,score,allocation,wallet_address,risk_score,status,claim_id,claim_tx_hash,claimed_at,paid_at FROM airdrop_allocations WHERE snapshot_id=$1 ORDER BY allocation DESC',[req.params.id]);res.json({snapshot:s.rows[0],allocations:a.rows});}finally{c.release();}});
 app.post('/api/admin/airdrop/:id/payout',async(req,res)=>{const denied=adminGuard(req,res);if(denied)return;const claimId=String(req.body?.claimId||'');const txHash=String(req.body?.txHash||'').trim();if(!claimId||txHash.length<20)return res.status(400).json({error:'claim_id_and_tx_hash_required'});const c=await pool.connect();try{await c.query('BEGIN');const q=await c.query('SELECT * FROM airdrop_claims WHERE id=$1 FOR UPDATE',[claimId]);if(!q.rowCount){await c.query('ROLLBACK');return res.status(404).json({error:'claim_not_found'});}if(q.rows[0].status==='paid'){await c.query('COMMIT');return res.json({ok:true,status:'paid',txHash:q.rows[0].payout_tx_hash});}await c.query("UPDATE airdrop_claims SET status='paid',payout_tx_hash=$2,paid_at=NOW() WHERE id=$1",[claimId,txHash]);await c.query("UPDATE airdrop_allocations SET status='paid',claim_tx_hash=$2,paid_at=NOW() WHERE claim_id=$1",[claimId,txHash]);await c.query('COMMIT');res.json({ok:true,status:'paid',txHash});}catch(e){await c.query('ROLLBACK');if(e.code==='23505')return res.status(409).json({error:'payout_tx_already_used'});res.status(500).json({error:'payout_record_failed'});}finally{c.release();}});
 
-app.get('/tonconnect-manifest.json',async(req,res)=>{res.type('application/json').send(JSON.stringify({url:APP_URL,name:'TapNova',iconUrl:(APP_URL?APP_URL:'')+'/icon.png'}));});
+app.get('/api/ton/config',async(req,res)=>{
+ const origin=(APP_URL||`${req.protocol}://${req.get('host')}`).replace(/\/$/,'');
+ let projectWallet='';try{projectWallet=Address.parse(PROJECT_WALLET).toString({bounceable:true,testOnly:false,urlSafe:true});}catch{}
+ res.json({ok:true,network:TON_MAINNET,manifestUrl:`${origin}/tonconnect-manifest.json`,iconUrl:`${origin}/icon.png`,projectWallet,configured:!!projectWallet});
+});
+app.get('/tonconnect-manifest.json',async(req,res)=>{
+ const origin=(APP_URL||`${req.protocol}://${req.get('host')}`).replace(/\/$/,'');
+ res.set('Cache-Control','no-store');
+ res.type('application/json').send(JSON.stringify({url:origin,name:'TapNova',iconUrl:`${origin}/icon.png`}));
+});
 app.use(express.static(path.join(root,'frontend')));
 app.get('*',(req,res)=>res.sendFile(path.join(root,'frontend','index.html')));
 

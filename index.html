@@ -8,7 +8,7 @@
 <title>TapNova — Tap & Earn</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+<script src="https://unpkg.com/@tonconnect/ui@3.0.2/dist/tonconnect-ui.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@tonconnect/ui@3.0.2/dist/tonconnect-ui.min.js'"></script>
 
 <style>
 :root{
@@ -319,7 +319,8 @@ let pendingTaps = 0;
 let tapFlushTimer = null;
 
 const BOT_USERNAME = ""; // Set your bot username without @.
-const TON_MANIFEST = new URL("tonconnect-manifest.json", location.href).href;
+const TON_MANIFEST = new URL("/tonconnect-manifest.json", window.location.origin).href;
+const TON_MAINNET = "-239";
 
 const CHANNELS = [
   {id:"channel",icon:"📢",name:"TapNova Official Channel",desc:"Announcements, launches & airdrop news",url:"https://t.me/YOUR_CHANNEL"},
@@ -706,41 +707,62 @@ async function setupTonConnect(){
    if(!root)return;
    root.innerHTML="";
    if(!window.TON_CONNECT_UI){
-     root.innerHTML='<div class="notice">TON Connect library is not available. Check internet access and reload the Mini App.</div>';
-     setTonMessage("TON Connect UI script failed to load.",true);
+     root.innerHTML='<div class="notice">TON Connect library is not available. Reload the Mini App or check network access.</div>';
+     setTonMessage("TON Connect UI failed to load from the CDN.",true);
      tonSetupPromise=null;return;
    }
    try{
-     // A single TonConnectUI instance is created only once. This avoids duplicate button roots.
+     // TON Connect requires a public HTTPS manifest. The manifest is served by the same origin.
+     const manifestCheck=await fetch(TON_MANIFEST,{cache:"no-store"});
+     if(!manifestCheck.ok)throw new Error("manifest_http_"+manifestCheck.status);
+     const manifest=await manifestCheck.json();
+     if(!manifest.url||!manifest.iconUrl)throw new Error("manifest_content_invalid");
+
      tonUI=new TON_CONNECT_UI.TonConnectUI({
        manifestUrl:TON_MANIFEST,
        buttonRootId:"ton-connect",
-       uiPreferences:{theme:"DARK",borderRadius:"s"}
+       uiPreferences:{theme:"DARK",borderRadius:"s"},
+       analytics:{mode:"off"}
      });
+
+     // Force the dApp to mainnet before the wallet picker opens.
+     if(typeof tonUI.setConnectionNetwork==="function")tonUI.setConnectionNetwork(TON_MAINNET);
+
      if(typeof tonUI.onStatusChange==="function"){
        tonUI.onStatusChange(wallet=>{
          if(wallet){
+           const raw=wallet.account?.address||"";
            state.wallet=true;
-           state.walletAddress=wallet.account?.address||"";
-           api('/api/wallet/link',{method:'POST',body:JSON.stringify({address:state.walletAddress})}).catch(console.error);
+           state.walletAddress=raw;
+           api('/api/wallet/link',{method:'POST',body:JSON.stringify({address:raw})})
+             .then(()=>{save();render();})
+             .catch(err=>{console.error("wallet link failed",err);setTonMessage("Wallet connected, but server linking failed: "+err.message,true);});
+           setTonMessage("Wallet connected ✓");
            toast("TON Wallet connected!");
          }else{
-           state.wallet=false;state.walletAddress="";
+           state.wallet=false;state.walletAddress="";save();render();setTonMessage("Wallet disconnected.");
          }
          save();render();
        });
      }
-     // Restore already-connected wallet if the SDK exposes it.
-     try{
-       const existing=tonUI.wallet;
-       if(existing){state.wallet=true;state.walletAddress=existing.account?.address||"";save();render();}
-     }catch(e){}
-     setTonMessage("TON Connect ready. Tap the button above to connect your wallet.");
+
+     // Wait for the SDK's session restoration instead of guessing from tonUI.wallet.
+     if(tonUI.connectionRestored&&typeof tonUI.connectionRestored.then==="function"){
+       await tonUI.connectionRestored;
+     }
+     const existing=tonUI.wallet;
+     if(existing){
+       state.wallet=true;
+       state.walletAddress=existing.account?.address||"";
+       save();render();setTonMessage("Wallet connection restored ✓");
+     }else{
+       setTonMessage("TON Connect ready. Tap Connect Wallet above.");
+     }
    }catch(err){
      console.error("TON Connect init failed",err);
      tonUI=null;
-     root.innerHTML='<div class="notice">TON Connect could not initialize. Check that tonconnect-manifest.json is publicly reachable over HTTPS.</div>';
-     setTonMessage("Manifest or TON Connect configuration could not be loaded.",true);
+     root.innerHTML='<div class="notice">TON Connect could not initialize. Open /tonconnect-manifest.json directly in your browser and verify it returns valid JSON over HTTPS.</div>';
+     setTonMessage("TON Connect error: "+(err?.message||"unknown error"),true);
    }finally{tonSetupPromise=null}
  })();
  return tonSetupPromise;
@@ -757,7 +779,7 @@ window.payJoinFee=async function(){
  if(!wallet){toast("Please connect your TON wallet first.");return;}
  try{
    const intent=await api('/api/payments/create',{method:'POST'});
-   const result=await tonUI.sendTransaction({validUntil:Math.floor(Date.now()/1000)+600,network:"-239",messages:[{address:intent.destination,amount:intent.amountNanoton}]});
+   const result=await tonUI.sendTransaction({validUntil:Math.floor(Date.now()/1000)+600,network:TON_MAINNET,messages:[{address:intent.destination,amount:intent.amountNanoton}]});
    // The server verifies the actual on-chain incoming transfer; the client never marks joined by itself.
    for(let i=0;i<6;i++){
      const v=await api('/api/payments/verify',{method:'POST',body:JSON.stringify({intentId:intent.id,boc:result.boc})});
