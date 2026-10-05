@@ -1,16 +1,21 @@
-# TON Connect focused fix
+# TON Connect fix — final architecture
 
-This archive is focused only on TON Connect reliability.
+The previous failure was caused by mixing a static GitHub Pages frontend with same-origin API/manifest URLs.
 
-Changes:
-- Pin official `@tonconnect/ui` to 3.0.2 instead of `latest`.
-- Add jsDelivr CDN fallback if UNPKG fails.
-- Build manifest URL from the production origin instead of a relative path.
-- Validate the manifest before initializing TonConnect UI.
-- Set TON mainnet (`-239`) before opening the wallet picker.
-- Use `connectionRestored` for session restoration.
-- Normalize connected wallet addresses server-side with `@ton/core`.
-- Normalize the project treasury address to user-friendly TON format before returning it to the frontend.
-- Add `/api/ton/config` diagnostic endpoint.
-- Add a focused TON Connect setup/troubleshooting document.
-- Keep transaction verification server-side; the client never marks a payment as verified by itself.
+Fixed:
+1. Frontend API base points to Render via `frontend/config.js`.
+2. TON manifest URL points to the Render backend.
+3. Backend CORS allows the GitHub Pages origin.
+4. Backend dynamically serves a production manifest with the real backend origin.
+5. Wallet address is normalized to user-friendly mainnet form before linking.
+6. Mainnet chain `-239` is enforced before wallet selection/transaction.
+7. Payment remains server-verified; client never marks payment as verified.
+8. `@tonconnect/ui` remains pinned to 3.0.2, which is the current published UI package version checked during this build.
+
+Required live checks after deployment:
+- Open backend `/tonconnect-manifest.json` directly.
+- Open frontend from Telegram.
+- Tap Connect Wallet.
+- Confirm the wallet appears and returns a connected address.
+- Confirm `/api/wallet/link` succeeds.
+- Only then test the 0.1 TON payment flow.

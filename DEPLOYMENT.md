@@ -1,41 +1,35 @@
-# TapNova Deployment
+# TapNova deployment (GitHub Pages + Render)
 
-## Required environment variables
+## Architecture
+- GitHub Pages: public frontend at `https://tapnova2026.github.io/tapnova2026/`
+- Render: Node/Express backend + TON manifest + API
+- PostgreSQL: Render database
 
-```text
-NODE_ENV=production
-PORT=3000
-APP_URL=https://YOUR-DOMAIN
-DATABASE_URL=YOUR-POSTGRES-URL
-TELEGRAM_BOT_TOKEN=YOUR-BOT-TOKEN
-TELEGRAM_BOT_USERNAME=YOUR_BOT_USERNAME
-TELEGRAM_CHANNEL_ID=@YOUR_CHANNEL
-PROJECT_TON_WALLET=YOUR_TREASURY_WALLET
-JOIN_FEE_NANOTON=100000000
-TONAPI_BASE_URL=https://tonapi.io
-TONAPI_TOKEN=YOUR_TONAPI_TOKEN
-```
+## 1. Render
+Deploy the repository using `render.yaml`. Set these values in Render Environment:
+- `APP_URL=https://tapnova.onrender.com` (replace if Render assigns a different URL)
+- `CORS_ORIGINS=https://tapnova2026.github.io`
+- `PROJECT_TON_WALLET=UQAbrZTySlI0f0km5LJkGfSndWhCOchOJfa9PPAhiyQdb9lF`
+- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_CHANNEL_ID`
+- `TONAPI_TOKEN`, `ADMIN_SECRET`
 
-## Before public launch
+After deploy, verify:
+- `/api/health`
+- `/tonconnect-manifest.json`
+- `/icon.png`
+- `/api/ton/config`
 
-1. Set the Telegram bot's Web App URL to the exact HTTPS `APP_URL`.
-2. Make the bot an administrator of the official channel so membership verification works.
-3. Set `PROJECT_TON_WALLET` to the real treasury wallet.
-4. Configure a production TONAPI token.
-5. Deploy with `NODE_ENV=production`.
-6. Check `GET /api/health`.
-7. Test taps, daily reward, cards, referrals and payment verification with a test account.
-8. Never put a seed phrase or private key in this project or its environment variables.
+The manifest must be public HTTPS JSON and its icon must be PNG/ICO.
 
-## Payment verification note
+## 2. GitHub Pages
+Copy the contents of `frontend/` into the Pages source. `config.js` points the static frontend at the Render backend. If your Render URL is not `https://tapnova.onrender.com`, edit only `frontend/config.js` and set the real URL.
 
-The backend verifies the TonConnect BOC by deriving a normalized external-in message hash and resolving the transaction through TONAPI. For a large-value public launch, use a production TONAPI plan and monitor verification failures/rate limits.
+## 3. Telegram
+Set the Mini App URL to:
+`https://tapnova2026.github.io/tapnova2026/`
 
+## 4. TON Connect
+The frontend uses the backend-hosted manifest, not the GitHub Pages manifest:
+`https://tapnova.onrender.com/tonconnect-manifest.json`
 
-## Final launch configuration
-
-Configure `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHANNEL_ID`, `PROJECT_TON_WALLET`, `TONAPI_TOKEN`, `DATABASE_URL`, `APP_URL`, and a long random `ADMIN_SECRET`. The Telegram bot should be an administrator of the channel for reliable `getChatMember` verification.
-
-TON verification expects the TonConnect result BOC and resolves its normalized external-in message through TONAPI.
-
-Airdrop payout is treasury-controlled: no private key is stored in this repository. After a user creates a claim, the treasury/distributor pays the allocation to the recorded wallet and the admin records the payout transaction hash.
+The project wallet is the user-friendly mainnet address supplied for TapNova. Never put a seed phrase/private key in this project.

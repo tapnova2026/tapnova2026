@@ -18,7 +18,9 @@ const PORT=Number(process.env.PORT||3000);
 const BOT_TOKEN=process.env.TELEGRAM_BOT_TOKEN||'';
 const BOT_USERNAME=process.env.TELEGRAM_BOT_USERNAME||'';
 const isProd=process.env.NODE_ENV==='production';
-const APP_URL=process.env.APP_URL||'';
+const APP_URL=(process.env.APP_URL||'').replace(/\/$/,'');
+const CORS_ORIGINS=String(process.env.CORS_ORIGINS||'').split(',').map(s=>s.trim().replace(/\/$/,'')).filter(Boolean);
+const ALLOWED_ORIGINS=new Set([APP_URL,...CORS_ORIGINS,'https://tapnova2026.github.io'].filter(Boolean));
 const PROJECT_WALLET=process.env.PROJECT_TON_WALLET||'';
 const JOIN_FEE_NANOTON=BigInt(process.env.JOIN_FEE_NANOTON||'100000000');
 const TONAPI_BASE_URL=(process.env.TONAPI_BASE_URL||'https://tonapi.io').replace(/\/$/,'');
@@ -50,7 +52,7 @@ async function initDatabase(){
 
 app.set('trust proxy',1);
 app.use(helmet({contentSecurityPolicy:false}));
-app.use(cors({origin:(origin,cb)=>{if(!origin||!isProd)return cb(null,true);return cb(null,origin===APP_URL);},credentials:false}));
+app.use(cors({origin:(origin,cb)=>{if(!origin||!isProd)return cb(null,true);return cb(null,ALLOWED_ORIGINS.has(origin));},credentials:false}));
 app.use(express.json({limit:'100kb'}));
 app.use('/api/health',rateLimit({windowMs:60_000,max:30,standardHeaders:true,legacyHeaders:false}));
 

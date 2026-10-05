@@ -8,6 +8,7 @@
 <title>TapNova — Tap & Earn</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="config.js"></script>
 <script src="https://unpkg.com/@tonconnect/ui@3.0.2/dist/tonconnect-ui.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@tonconnect/ui@3.0.2/dist/tonconnect-ui.min.js'"></script>
 
 <style>
@@ -313,13 +314,13 @@ try{tg?.ready();tg?.expand();}catch(e){}
 const tgUser = tg?.initDataUnsafe?.user || null;
 const userId = String(tgUser?.id || "browser_user");
 const storageKey = "tapnova_cache_" + userId;
-const API_BASE = "";
+const API_BASE = (window.TAPNOVA_BACKEND_URL || "https://tapnova.onrender.com").replace(/\/$/, "");
 let serverReady = false;
 let pendingTaps = 0;
 let tapFlushTimer = null;
 
 const BOT_USERNAME = ""; // Set your bot username without @.
-const TON_MANIFEST = new URL("/tonconnect-manifest.json", window.location.origin).href;
+const TON_MANIFEST = API_BASE + "/tonconnect-manifest.json";
 const TON_MAINNET = "-239";
 
 const CHANNELS = [
@@ -732,9 +733,12 @@ async function setupTonConnect(){
        tonUI.onStatusChange(wallet=>{
          if(wallet){
            const raw=wallet.account?.address||"";
+           const friendly=(window.TON_CONNECT_UI.toUserFriendlyAddress)
+             ? window.TON_CONNECT_UI.toUserFriendlyAddress(raw, false)
+             : raw;
            state.wallet=true;
-           state.walletAddress=raw;
-           api('/api/wallet/link',{method:'POST',body:JSON.stringify({address:raw})})
+           state.walletAddress=friendly;
+           api('/api/wallet/link',{method:'POST',body:JSON.stringify({address:friendly})})
              .then(()=>{save();render();})
              .catch(err=>{console.error("wallet link failed",err);setTonMessage("Wallet connected, but server linking failed: "+err.message,true);});
            setTonMessage("Wallet connected ✓");
@@ -753,7 +757,7 @@ async function setupTonConnect(){
      const existing=tonUI.wallet;
      if(existing){
        state.wallet=true;
-       state.walletAddress=existing.account?.address||"";
+       state.walletAddress=(window.TON_CONNECT_UI.toUserFriendlyAddress ? window.TON_CONNECT_UI.toUserFriendlyAddress(existing.account?.address||"", false) : (existing.account?.address||""));
        save();render();setTonMessage("Wallet connection restored ✓");
      }else{
        setTonMessage("TON Connect ready. Tap Connect Wallet above.");
