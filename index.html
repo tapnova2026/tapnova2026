@@ -181,16 +181,19 @@ font-size:66px;font-weight:950;color:#7a4708}.coin:after{content:"T";width:86px;
 
   <div class="card">
     <div class="card-title">📊 Eligibility Snapshot</div>
+    <div class="item"><div class="item-icon">🏆</div><div class="item-main"><b>Airdrop Score</b><span id="airdropEligibilityText">Checking eligibility…</span></div><b id="airScore">0</b></div>
     <div class="item"><div class="item-icon">💎</div><div class="item-main"><b>TNV Balance</b><span>Current earned balance</span></div><b id="airBalance">0</b></div>
     <div class="item"><div class="item-icon">⚡</div><div class="item-main"><b>PPH</b><span>Points per hour</span></div><b id="airPPH">0</b></div>
     <div class="item"><div class="item-icon">👥</div><div class="item-main"><b>Referrals</b><span>Invited users</span></div><b id="airRefs">0</b></div>
+    <div class="item"><div class="item-icon">🎁</div><div class="item-main"><b>Airdrop Allocation</b><span id="airdropClaimText">No finalized snapshot yet</span></div><b id="airAllocation">0</b></div>
+    <button class="action green" style="margin-top:11px" onclick="claimAirdrop()" id="claimAirdropBtn">🎁 Claim Airdrop</button>
   </div>
 
   <div class="card">
     <div class="card-title">⛓️ Optional Join Fee</div>
     <div class="muted">Join fee: <b style="color:var(--accent)">0.1 TON</b>. Your wallet must show the transaction before you approve it.</div>
     <button class="action green" style="margin-top:11px" onclick="payJoinFee()">💎 Pay 0.1 TON & Join</button>
-    <div class="notice" style="margin-top:10px">Client-side demo only: blockchain confirmation is not verified here. Use a backend/indexer before granting verified rewards.</div>
+    <div class="notice" style="margin-top:10px">Server-side TON verification is required. TapNova never trusts the client to mark a payment as verified.</div>
   </div>
 
   <div class="card">
@@ -309,11 +312,13 @@ try{tg?.ready();tg?.expand();}catch(e){}
 
 const tgUser = tg?.initDataUnsafe?.user || null;
 const userId = String(tgUser?.id || "browser_user");
-const storageKey = "tapnova_unified_" + userId;
+const storageKey = "tapnova_cache_" + userId;
+const API_BASE = "";
+let serverReady = false;
+let pendingTaps = 0;
+let tapFlushTimer = null;
 
 const BOT_USERNAME = ""; // Set your bot username without @.
-const PROJECT_WALLET = "UQAbrZTySlI0f0km5LJkGfSndWhCOchOJfa9PPAhiyQdb9lF";
-const JOIN_FEE_NANOTON = "100000000"; // 0.1 TON
 const TON_MANIFEST = new URL("tonconnect-manifest.json", location.href).href;
 
 const CHANNELS = [
@@ -333,7 +338,7 @@ const LEVELS = [
 const TASKS = [
  {id:"daily",icon:"⚡",title:"Daily Tap",desc:"Tap at least once today",reward:100},
  {id:"telegram",icon:"📢",title:"Join Telegram",desc:"Open the official channel",reward:250},
- {id:"share",icon:"📤",title:"Share TapNova",desc:"Share the project with friends",reward:200},
+ {id:"share",icon:"📤",title:"Refer a Friend",desc:"Refer a friend and wait for activation",reward:200},
  {id:"wallet",icon:"💎",title:"Connect TON Wallet",desc:"Connect inside Airdrop",reward:300}
 ];
 
@@ -352,7 +357,7 @@ const defaults = {
  referrals:0,taskBonus:0,completed:{},dailyClaim:"",streak:0,lastDay:"",
  referredBy:"",wallet:false,walletAddress:"",joined:false,
  communitySubscribed:false,communityReward:false,
- ownedCards:{},weeklyCards:[],lastWeeklySync:0
+ ownedCards:{},weeklyCards:[],lastWeeklySync:0,airdropScore:0,airdropEligible:false,airdropRisk:0,airdrop:{available:false}
 };
 
 let state = load();
@@ -361,52 +366,36 @@ let tonSetupPromise = null;
 
 function load(){
  try{
-   const candidates = [
-     localStorage.getItem(storageKey),
-     localStorage.getItem("tapnova_" + userId),
-     localStorage.getItem("tapnova_hamster_" + userId)
-   ];
-   let raw = null;
-   for(const item of candidates){
-     if(item){
-       try{ raw=JSON.parse(item); if(raw && typeof raw==="object") break; }catch(e){}
-     }
-   }
-   const s=raw&&typeof raw==="object"?raw:{};
-
-   // Migrate the three earlier state shapes into this unified state.
-   const completed = s.completed || s.completedTasks || {};
-   const legacyCards = s.ownedCards || {};
-   const migratedCards = {};
-   Object.keys(legacyCards).forEach(id=>{
-     const value=legacyCards[id];
-     migratedCards[id]=typeof value==="object"
-       ? {...value,level:Number(value.level||1)}
-       : {level:1,purchasedAt:Date.now()};
-   });
-
-   const migrated = {
-     ...defaults,...s,
-     completed,
-     ownedCards:migratedCards,
-     weeklyCards:Array.isArray(s.weeklyCards)?s.weeklyCards:[],
-     balance:Number(s.balance||0),
-     taps:Number(s.taps||0),
-     todayEarned:Number(s.todayEarned||0),
-     referrals:Number(s.referrals||0),
-     taskBonus:Number(s.taskBonus||0),
-     energy:Number(s.energy ?? defaults.energy),
-     maxEnergy:Number(s.maxEnergy ?? defaults.maxEnergy),
-     lastEnergyAt:Number(s.lastEnergyAt||Date.now())
-   };
-
-   // Old v1/v2 wallet fields were named differently.
-   migrated.wallet = !!(s.wallet ?? s.walletConnected);
-   migrated.walletAddress = s.walletAddress || "";
-   return migrated;
+   const raw=localStorage.getItem(storageKey);
+   const s=raw?JSON.parse(raw):{};
+   return {...defaults,...s,completed:{},ownedCards:{},balance:0,taps:0,energy:1000,maxEnergy:1000,taskBonus:0,streak:0,referrals:0,wallet:false,walletAddress:"",joined:false};
  }catch(e){return {...defaults};}
 }
-function save(){try{localStorage.setItem(storageKey,JSON.stringify(state));}catch(e){}}
+function save(){try{localStorage.setItem(storageKey,JSON.stringify({wallet:state.wallet,walletAddress:state.walletAddress}));}catch(e){}}
+async function api(path,options={}){
+ const headers={"Content-Type":"application/json",...(options.headers||{})};
+ if(tg?.initData)headers["X-Telegram-Init-Data"]=tg.initData;
+ const res=await fetch(API_BASE+path,{...options,headers});
+ let data={};try{data=await res.json();}catch(e){}
+ if(!res.ok)throw new Error(data.error||"Request failed");
+ return data;
+}
+async function loadServerState(silent=false){
+ try{
+   const data=await api('/api/game/state');
+   const u=data.user||{};
+   state.balance=Number(u.balance||0);state.taps=Number(u.taps||0);state.energy=Number(u.energy||0);state.maxEnergy=Number(u.maxEnergy||1000);
+   state.taskBonus=Number(u.taskBonus||0);state.streak=Number(u.streak||0);state.dailyClaim=u.lastDaily?String(u.lastDaily).slice(0,10):"";
+   state.lastDay=state.dailyClaim;state.walletAddress=u.walletAddress||"";state.wallet=!!state.walletAddress;state.joined=!!u.joined;
+   state.ownedCards={};(data.cards||[]).forEach(c=>state.ownedCards[c.id]={level:Number(c.level||1)});
+   const refs=await api('/api/referrals').catch(()=>({completed:0}));state.referrals=Number(refs.completed||0);
+   const tasks=await api('/api/tasks/status').catch(()=>({completed:{}}));state.completed=tasks.completed||{};
+   const stats=await api('/api/stats/today').catch(()=>({todayEarned:0}));state.todayEarned=Number(stats.todayEarned||0);
+   const air=await api('/api/airdrop/score').catch(()=>({score:0,eligible:false,riskScore:0}));state.airdropScore=Number(air.score||0);state.airdropEligible=!!air.eligible;state.airdropRisk=Number(air.riskScore||0);
+   const current=await api('/api/airdrop/current').catch(()=>({available:false}));state.airdrop=current;
+   serverReady=true;render();
+ }catch(e){serverReady=false;if(!silent)toast("Server connection failed. Please reopen the Mini App.");console.error(e);}
+}
 function n(v){return Number(v||0).toLocaleString();}
 function dayKey(d=new Date()){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function weekIndex(d=Date.now()){return Math.floor(d/(7*86400000));}
@@ -462,15 +451,7 @@ function recalcPPH(){
  });
  return total;
 }
-function regenEnergy(){
- const now=Date.now(),elapsed=Math.max(0,now-(state.lastEnergyAt||now));
- const gain=Math.floor(elapsed/3000);
- if(gain>0){
-   state.energy=Math.min(state.maxEnergy,state.energy+gain);
-   state.lastEnergyAt=now-(elapsed%3000);
-   save();
- }
-}
+function regenEnergy(){ return; }
 function getTaskVolume(){
  return Object.keys(state.completed).reduce((sum,id)=>{
    const t=TASKS.find(x=>x.id===id);return sum+(t?t.reward:0);
@@ -478,7 +459,7 @@ function getTaskVolume(){
 }
 function getUserVolume(){return state.taps+state.referrals*100+recalcPPH()*10+getTaskVolume()}
 function render(){
- syncWeeklyCards();regenEnergy();
+ regenEnergy();
  const lv=currentLevel(),next=nextLevel(),pph=recalcPPH();
  document.getElementById("balance").innerHTML=n(state.balance)+' <small>TNV</small>';
  document.getElementById("levelName").textContent=lv.name;
@@ -533,6 +514,12 @@ function renderAirdrop(){
  document.getElementById("airBalance").textContent=n(state.balance);
  document.getElementById("airPPH").textContent=n(pph);
  document.getElementById("airRefs").textContent=n(state.referrals);
+ const airScore=document.getElementById("airScore");if(airScore)airScore.textContent=n(state.airdropScore);
+ const airText=document.getElementById("airdropEligibilityText");if(airText)airText.textContent=state.airdropEligible?"Eligible for the latest snapshot":"Not eligible yet · risk "+n(state.airdropRisk);
+ const alloc=document.getElementById("airAllocation");const claimText=document.getElementById("airdropClaimText");const claimBtn=document.getElementById("claimAirdropBtn");
+ if(alloc)alloc.textContent=state.airdrop?.available?n(state.airdrop.allocation):"0";
+ if(claimText)claimText.textContent=state.airdrop?.available?((state.airdrop.status||"available").toUpperCase()+" · "+(state.airdrop.tokenSymbol||"TNV")):"No finalized snapshot yet";
+ if(claimBtn)claimBtn.disabled=!(state.airdrop?.available&&["available","claimed"].includes(state.airdrop.status));
  const e=document.getElementById("walletStatus");
  if(state.wallet){
    e.textContent="TON Wallet connected ✓"+(state.walletAddress?" · "+state.walletAddress:"");
@@ -573,20 +560,17 @@ function renderCards(){
  "✓ Weekly card system synced. New cards are added automatically every 7 days.":
  "⏳ Weekly sync pending: "+weeks+" week(s).";
 }
-window.buyCard=function(id){
+window.buyCard=async function(id){
  const c=allCards().find(x=>x.id===id);if(!c||state.ownedCards[id])return;
- if(state.balance<c.price){toast("Not enough TNV.");return;}
- state.balance-=c.price;state.ownedCards[id]={level:1,purchasedAt:Date.now()};save();render();
- toast("🃏 "+c.name+" activated · +"+n(cardPPH({...c,level:1}))+" PPH");
+ if(c.week){toast("Weekly cards are temporarily disabled until server sync is enabled.");return;}
+ try{await api('/api/cards/'+encodeURIComponent(id)+'/buy',{method:'POST'});await loadServerState(true);toast("🃏 "+c.name+" activated");}
+ catch(e){toast(e.message||"Card purchase failed");}
 };
-window.upgradeCard=function(id){
- const c=allCards().find(x=>x.id===id),owned=state.ownedCards[id];
- if(!c||!owned)return;
- const level=owned.level||1;if(level>=c.max){toast("This card is already max level.");return;}
- const cost=upgradeCost({...c,level});
- if(state.balance<cost){toast("Not enough TNV for this upgrade.");return;}
- state.balance-=cost;owned.level=level+1;owned.upgradedAt=Date.now();save();render();
- toast("⬆️ "+c.name+" upgraded to Level "+owned.level+" · +"+n(cardPPH({...c,level:owned.level}))+" PPH");
+window.upgradeCard=async function(id){
+ const c=allCards().find(x=>x.id===id),owned=state.ownedCards[id];if(!c||!owned)return;
+ if(c.week){toast("Weekly cards are temporarily disabled until server sync is enabled.");return;}
+ try{const r=await api('/api/cards/'+encodeURIComponent(id)+'/upgrade',{method:'POST'});await loadServerState(true);toast("⬆️ "+c.name+" upgraded to Level "+r.level);}
+ catch(e){toast(e.message||"Card upgrade failed");}
 };
 function renderVolume(){
  const total=getUserVolume();
@@ -622,10 +606,10 @@ window.subscribeChannel=function(){
  state.communitySubscribed=true;save();renderCommunity();openTelegram(CHANNELS[0].url);
 };
 window.openCommunity=function(){openTelegram(CHANNELS[1].url)};
-window.claimCommunityReward=function(){
- if(state.communityReward)return;
+window.claimCommunityReward=async function(){
  if(!state.communitySubscribed){toast("Subscribe to the official channel first.");return;}
- state.communityReward=true;state.balance+=250;state.taskBonus+=250;state.todayEarned+=250;save();render();toast("📢 +250 TNV community reward!");
+ try{const r=await api('/api/tasks/telegram/claim',{method:'POST'});state.communityReward=true;await loadServerState(true);toast("📢 +"+n(r.reward)+" TNV community reward!");}
+ catch(e){toast(e.message||"Membership verification failed");}
 };
 function renderLevels(){
  const box=document.getElementById("levelsList");box.innerHTML="";
@@ -663,34 +647,36 @@ window.openPage=function(id,btn){
  window.scrollTo({top:0,behavior:"smooth"});
  if(id==="airdrop" && !tonUI) setupTonConnect();
 };
+function makeIdempotencyKey(){return crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random();}
+async function flushTaps(){
+ if(!serverReady||pendingTaps<=0)return;
+ const count=Math.min(50,pendingTaps);pendingTaps-=count;
+ try{await api('/api/taps/batch',{method:'POST',body:JSON.stringify({count,idempotencyKey:makeIdempotencyKey()})});await loadServerState(true);}
+ catch(e){pendingTaps+=count;toast(e.message||'Tap sync failed');}
+}
 function tap(e){
- regenEnergy();
+ if(!serverReady){toast("Connecting to TapNova server…");return;}
  if(state.energy<=0){toast("⚡ Energy is empty. It regenerates automatically.");return;}
- state.energy--;state.taps++;state.balance++;state.todayEarned++;state.lastEnergyAt=Date.now();save();render();
+ pendingTaps++;state.energy--;state.taps++;state.balance++;state.todayEarned++;render();
+ clearTimeout(tapFlushTimer);tapFlushTimer=setTimeout(flushTaps,700);
+ if(pendingTaps>=20)flushTaps();
  const r=document.createElement("div");r.className="float";r.textContent="+1 TNV";
- r.style.left=(e.clientX||innerWidth/2)+"px";r.style.top=(e.clientY||innerHeight/2)+"px";
- document.body.appendChild(r);setTimeout(()=>r.remove(),750);
+ r.style.left=(e.clientX||innerWidth/2)+"px";r.style.top=(e.clientY||innerHeight/2)+"px";document.body.appendChild(r);setTimeout(()=>r.remove(),750);
 }
 document.getElementById("tapButton").addEventListener("pointerdown",tap);
 
-document.getElementById("dailyBtn").onclick=()=>{
- const today=dayKey();if(state.dailyClaim===today)return;
- const yesterday=dayKey(new Date(Date.now()-86400000));
- state.streak=state.lastDay===yesterday?state.streak+1:1;
- state.lastDay=today;state.dailyClaim=today;state.balance+=500;state.taskBonus+=500;state.todayEarned+=500;
- save();render();toast("🎁 +500 TNV daily reward!");
+document.getElementById("dailyBtn").onclick=async()=>{
+ try{const r=await api('/api/daily/claim',{method:'POST'});await loadServerState(true);toast("🎁 +"+n(r.reward)+" TNV daily reward!");}
+ catch(e){toast(e.message||"Daily reward failed");}
 };
 
-window.completeTask=function(id){
+window.completeTask=async function(id){
  const t=TASKS.find(x=>x.id===id);if(!t||state.completed[id])return;
- if(id==="daily" && state.taps<1){toast("Tap at least once first.");return;}
- if(id==="telegram"){openTelegram(CHANNELS[0].url);}
- if(id==="share"){shareReferral();return;}
- if(id==="wallet"){
-   if(!state.wallet){openPage("airdrop");toast("Connect your TON wallet first.");return;}
- }
- state.completed[id]=true;state.balance+=t.reward;state.taskBonus+=t.reward;state.todayEarned+=t.reward;
- save();render();toast("+"+n(t.reward)+" TNV added!");
+ if(id==="share"){shareReferral();toast("Refer a friend, then claim after the referral activates.");return;}
+ if(id==="telegram")openTelegram(CHANNELS[0].url);
+ if(id==="wallet"&&!state.wallet){openPage("airdrop");toast("Connect your TON wallet first.");return;}
+ try{const r=await api('/api/tasks/'+encodeURIComponent(id)+'/claim',{method:'POST'});state.completed[id]=true;await loadServerState(true);toast("+"+n(r.reward)+" TNV added!");}
+ catch(e){toast(e.message||"Task verification failed");}
 };
 
 function referralLink(){
@@ -736,10 +722,8 @@ async function setupTonConnect(){
          if(wallet){
            state.wallet=true;
            state.walletAddress=wallet.account?.address||"";
-           if(!state.completed.wallet){
-             state.completed.wallet=true;state.balance+=300;state.taskBonus+=300;state.todayEarned+=300;
-             toast("💎 Wallet connected · +300 TNV");
-           }else toast("TON Wallet connected!");
+           api('/api/wallet/link',{method:'POST',body:JSON.stringify({address:state.walletAddress})}).catch(console.error);
+           toast("TON Wallet connected!");
          }else{
            state.wallet=false;state.walletAddress="";
          }
@@ -772,20 +756,26 @@ window.payJoinFee=async function(){
  let wallet=null;try{wallet=tonUI.wallet}catch(e){}
  if(!wallet){toast("Please connect your TON wallet first.");return;}
  try{
-   const result=await tonUI.sendTransaction({
-     validUntil:Math.floor(Date.now()/1000)+600,
-     network:"-239",
-     messages:[{address:PROJECT_WALLET,amount:JOIN_FEE_NANOTON}]
-   });
-   state.joined=true;save();render();toast("Transaction submitted successfully.");
-   console.log("TON transaction result:",result);
- }catch(e){console.error(e);toast("Payment cancelled or failed.");}
+   const intent=await api('/api/payments/create',{method:'POST'});
+   const result=await tonUI.sendTransaction({validUntil:Math.floor(Date.now()/1000)+600,network:"-239",messages:[{address:intent.destination,amount:intent.amountNanoton}]});
+   // The server verifies the actual on-chain incoming transfer; the client never marks joined by itself.
+   for(let i=0;i<6;i++){
+     const v=await api('/api/payments/verify',{method:'POST',body:JSON.stringify({intentId:intent.id,boc:result.boc})});
+     if(v.verified){await loadServerState(true);toast("✅ Payment verified. You have joined TapNova.");return;}
+     await new Promise(r=>setTimeout(r,5000));
+   }
+   toast("Payment submitted. Verification is still pending; reopen the app later to refresh.");
+ }catch(e){console.error(e);toast(e.message||"Payment cancelled or failed.");}
+};
+window.claimAirdrop=async function(){
+ try{const r=await api('/api/airdrop/claim',{method:'POST'});await loadServerState(true);if(r.status==='paid')toast('✅ Airdrop already paid.');else toast('🎁 Airdrop claim requested: '+n(r.amount)+' TNV');}
+ catch(e){toast(e.message||'Airdrop claim failed');}
 };
 function handleReferralStart(){
  try{
    const p=tg?.initDataUnsafe?.start_param||new URLSearchParams(location.search).get("startapp");
    if(p?.startsWith("ref_")&&!state.referredBy){
-     const ref=p.slice(4);if(ref&&ref!==userId){state.referredBy=ref;save();}
+     const ref=p.slice(4);if(ref&&ref!==userId){state.referredBy=ref;api('/api/referrals/activate',{method:'POST',body:JSON.stringify({referrerId:ref})}).catch(e=>console.warn('Referral activation',e.message));}
    }
  }catch(e){}
 }
@@ -793,11 +783,11 @@ function handleReferralStart(){
 document.getElementById("userName").textContent=tgUser?.first_name||"Nova User";
 document.getElementById("avatar").textContent=(tgUser?.first_name||"N").slice(0,1).toUpperCase();
 handleReferralStart();
-syncWeeklyCards();
 render();
+loadServerState();
 
 // Energy and weekly-card checks continue while the Mini App is open.
-setInterval(()=>{regenEnergy();syncWeeklyCards();render();},5000);
+setInterval(()=>{if(serverReady){flushTaps();loadServerState(true);}},10000);
 })();
 </script>
 </body>

@@ -20,6 +20,8 @@ services:
         sync: false
       - key: TELEGRAM_BOT_USERNAME
         sync: false
+      - key: TELEGRAM_CHANNEL_ID
+        sync: false
       - key: PROJECT_TON_WALLET
         sync: false
       - key: JOIN_FEE_NANOTON
@@ -28,6 +30,16 @@ services:
         value: https://tonapi.io
       - key: TONAPI_TOKEN
         sync: false
+      - key: ADMIN_SECRET
+        sync: false
+      - key: AIRDROP_RISK_MAX
+        value: "80"
+      - key: AIRDROP_MIN_SCORE
+        value: "1"
+      - key: AIRDROP_CLAIM_REQUIRE_JOINED
+        value: "false"
+      - key: AIRDROP_TOKEN_SYMBOL
+        value: "TNV"
 
 databases:
   - name: tapnova-db

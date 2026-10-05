@@ -23,8 +23,14 @@ services:
       DATABASE_URL: postgresql://tapnova:tapnova_dev_password@postgres:5432/tapnova
       TELEGRAM_BOT_TOKEN: ""
       TELEGRAM_BOT_USERNAME: ""
+      TELEGRAM_CHANNEL_ID: ""
       APP_URL: http://localhost:3000
       PROJECT_TON_WALLET: ""
+      ADMIN_SECRET: ""
+      AIRDROP_RISK_MAX: "80"
+      AIRDROP_MIN_SCORE: "1"
+      AIRDROP_CLAIM_REQUIRE_JOINED: "false"
+      AIRDROP_TOKEN_SYMBOL: "TNV"
       JOIN_FEE_NANOTON: "100000000"
     ports:
       - "3000:3000"
