@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tapnova
+      POSTGRES_USER: tapnova
+      POSTGRES_PASSWORD: tapnova_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - tapnova_pgdata:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://tapnova:tapnova_dev_password@postgres:5432/tapnova
+      TELEGRAM_BOT_TOKEN: ""
+      TELEGRAM_BOT_USERNAME: ""
+      APP_URL: http://localhost:3000
+      PROJECT_TON_WALLET: ""
+      JOIN_FEE_NANOTON: "100000000"
+    ports:
+      - "3000:3000"
+
+volumes:
+  tapnova_pgdata:
