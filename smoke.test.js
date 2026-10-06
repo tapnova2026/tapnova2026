@@ -33,3 +33,26 @@ test('final launch features are present',async()=>{
 test('schema contains final airdrop tables',async()=>{
  const schema=await readFile(path.join(root,'schema.sql'),'utf8');assert.match(schema,/CREATE TABLE IF NOT EXISTS airdrop_snapshots/);assert.match(schema,/CREATE TABLE IF NOT EXISTS airdrop_allocations/);assert.match(schema,/CREATE TABLE IF NOT EXISTS airdrop_claims/);
 });
+
+
+test('TON Connect Telegram return configuration is present',async()=>{
+ const server=await readFile(path.join(root,'src','server.js'),'utf8');
+ const frontend=await readFile(path.join(root,'..','frontend','index.html'),'utf8');
+ assert.match(server,/\/api\/public\/ton\/config/);
+ assert.match(frontend,/twaReturnUrl/);
+ assert.match(frontend,/setConnectionNetwork\(TON_MAINNET\)/);
+ assert.match(frontend,/connectionRestored/);
+});
+
+test('TON Connect retry does not blindly create duplicate instances',async()=>{
+ const frontend=await readFile(path.join(root,'..','frontend','index.html'),'utf8');
+ assert.match(frontend,/tonUI && !tonUI\.wallet/);
+ assert.match(frontend,/await tonUI\.disconnect\?\.\(\)/);
+});
+
+test('frontend uses server-controlled payment destination',async()=>{
+ const frontend=await readFile(path.join(root,'..','frontend','index.html'),'utf8');
+ assert.match(frontend,/\/api\/payments\/create/);
+ assert.match(frontend,/intent\.destination/);
+ assert.match(frontend,/intent\.amountNanoton/);
+});

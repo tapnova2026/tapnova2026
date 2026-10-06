@@ -44,3 +44,10 @@ The app waits for TonConnect's `connectionRestored` promise on reload, so a prev
 - Transaction rejected: verify `PROJECT_TON_WALLET` is a valid user-friendly TON address and the wallet is on mainnet.
 
 Do not put a seed phrase or private key in TapNova or Render environment variables.
+
+
+## Telegram Mini App return handling
+
+`/api/public/ton/config` exposes only non-secret TON configuration and the bot username. The frontend uses that public username to set TonConnect UI's `twaReturnUrl`, which is required for reliable return behavior when the dApp is running inside Telegram Mini Apps.
+
+The bot token is never exposed to the frontend.

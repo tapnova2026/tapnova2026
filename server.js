@@ -105,6 +105,22 @@ async function addRisk(c,id,points,event,metadata={}){
 function today(){return new Date().toISOString().slice(0,10);}
 
 app.get('/api/health',async(req,res)=>{try{await pool.query('SELECT 1');res.json({ok:true,service:'tapnova',time:new Date().toISOString()});}catch(e){res.status(503).json({ok:false,error:'database_unavailable'});}});
+app.get('/api/public/ton/config',async(req,res)=>{
+ const origin=(APP_URL||`${req.protocol}://${req.get('host')}`).replace(/\/$/,'');
+ let projectWallet='';
+ try{projectWallet=Address.parse(PROJECT_WALLET).toString({bounceable:true,testOnly:false,urlSafe:true});}catch{}
+ res.set('Cache-Control','public, max-age=300');
+ res.json({
+   ok:true,
+   network:TON_MAINNET,
+   manifestUrl:`${origin}/tonconnect-manifest.json`,
+   iconUrl:`${origin}/icon.png`,
+   projectWallet,
+   configured:!!projectWallet,
+   telegramBotUsername:BOT_USERNAME||''
+ });
+});
+
 app.use('/api',(req,res,next)=>{if(req.path.startsWith('/admin/'))return next();try{req.tgUser=authUser(req);next();}catch(e){res.status(401).json({error:e.message});}});
 
 app.get('/api/game/state',async(req,res)=>{

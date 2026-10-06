@@ -322,6 +322,8 @@ let tapFlushTimer = null;
 const BOT_USERNAME = ""; // Set your bot username without @.
 const TON_MANIFEST = API_BASE + "/tonconnect-manifest.json";
 const TON_MAINNET = "-239";
+let tonPublicConfigPromise = null;
+let tonConnectError = null;
 
 const CHANNELS = [
   {id:"channel",icon:"📢",name:"TapNova Official Channel",desc:"Announcements, launches & airdrop news",url:"https://t.me/YOUR_CHANNEL"},
@@ -706,28 +708,66 @@ async function setupTonConnect(){
  tonSetupPromise=(async()=>{
    const root=document.getElementById("ton-connect");
    if(!root)return;
+   if(tonUI){
+     try{
+       if(tonUI.wallet)return;
+       await tonUI.disconnect?.();
+     }catch(e){}
+     tonUI=null;
+   }
    root.innerHTML="";
-   if(!window.TON_CONNECT_UI){
-     root.innerHTML='<div class="notice">TON Connect library is not available. Reload the Mini App or check network access.</div>';
+   setTonMessage("Loading TON Connect…");
+
+   const waitForTonLibrary=async()=>{
+     const deadline=Date.now()+(window.TAPNOVA_TON_CONNECT_TIMEOUT_MS||15000);
+     while(!window.TON_CONNECT_UI && Date.now()<deadline){
+       await new Promise(r=>setTimeout(r,150));
+     }
+     return !!window.TON_CONNECT_UI;
+   };
+   if(!await waitForTonLibrary()){
+     root.innerHTML='<div class="notice">TON Connect library could not be loaded. Please reload Telegram and try again.</div>';
      setTonMessage("TON Connect UI failed to load from the CDN.",true);
      tonSetupPromise=null;return;
    }
+
    try{
-     // TON Connect requires a public HTTPS manifest. The manifest is served by the same origin.
-     const manifestCheck=await fetch(TON_MANIFEST,{cache:"no-store"});
+     // Fetch public configuration. This does not require Telegram authentication.
+     if(!tonPublicConfigPromise){
+       tonPublicConfigPromise=fetch(API_BASE+"/api/public/ton/config",{cache:"no-store"})
+         .then(r=>{if(!r.ok)throw new Error("ton_config_http_"+r.status);return r.json();})
+         .then(cfg=>{
+           if(!cfg.manifestUrl)throw new Error("ton_config_missing_manifest");
+           return cfg;
+         });
+     }
+     const cfg=await tonPublicConfigPromise;
+
+     // Verify the manifest before opening the wallet picker.
+     const manifestCheck=await fetch(cfg.manifestUrl,{cache:"no-store"});
      if(!manifestCheck.ok)throw new Error("manifest_http_"+manifestCheck.status);
      const manifest=await manifestCheck.json();
-     if(!manifest.url||!manifest.iconUrl)throw new Error("manifest_content_invalid");
+     if(manifest.url!==API_BASE && !manifest.url)throw new Error("manifest_content_invalid");
+     if(!manifest.iconUrl)throw new Error("manifest_icon_missing");
 
      tonUI=new TON_CONNECT_UI.TonConnectUI({
-       manifestUrl:TON_MANIFEST,
+       manifestUrl:cfg.manifestUrl,
        buttonRootId:"ton-connect",
        uiPreferences:{theme:"DARK",borderRadius:"s"},
-       analytics:{mode:"off"}
+       analytics:{mode:"off"},
+       enableAndroidBackHandler:false
      });
 
-     // Force the dApp to mainnet before the wallet picker opens.
+     // TON Connect requires the network to be selected before the wallet picker opens.
      if(typeof tonUI.setConnectionNetwork==="function")tonUI.setConnectionNetwork(TON_MAINNET);
+
+     // Telegram Mini Apps need a Telegram return URL when the selected wallet is external.
+     // The URL is public configuration; no bot secret is exposed here.
+     if(cfg.telegramBotUsername){
+       tonUI.uiOptions={
+         twaReturnUrl:"https://t.me/"+String(cfg.telegramBotUsername).replace(/^@/,"")
+       };
+     }
 
      if(typeof tonUI.onStatusChange==="function"){
        tonUI.onStatusChange(wallet=>{
@@ -736,55 +776,91 @@ async function setupTonConnect(){
            const friendly=(window.TON_CONNECT_UI.toUserFriendlyAddress)
              ? window.TON_CONNECT_UI.toUserFriendlyAddress(raw, false)
              : raw;
+           if(!friendly){
+             setTonMessage("Wallet connected but no address was returned.",true);
+             return;
+           }
            state.wallet=true;
            state.walletAddress=friendly;
            api('/api/wallet/link',{method:'POST',body:JSON.stringify({address:friendly})})
-             .then(()=>{save();render();})
-             .catch(err=>{console.error("wallet link failed",err);setTonMessage("Wallet connected, but server linking failed: "+err.message,true);});
-           setTonMessage("Wallet connected ✓");
+             .then(()=>{save();render();setTonMessage("Wallet connected ✓");})
+             .catch(err=>{
+               console.error("wallet link failed",err);
+               setTonMessage("Wallet connected, but server linking failed: "+err.message,true);
+             });
            toast("TON Wallet connected!");
          }else{
-           state.wallet=false;state.walletAddress="";save();render();setTonMessage("Wallet disconnected.");
+           state.wallet=false;state.walletAddress="";save();render();
+           setTonMessage("Wallet disconnected.");
          }
-         save();render();
        });
      }
 
-     // Wait for the SDK's session restoration instead of guessing from tonUI.wallet.
+     // Wait for SDK restoration before reading tonUI.wallet.
      if(tonUI.connectionRestored&&typeof tonUI.connectionRestored.then==="function"){
        await tonUI.connectionRestored;
      }
      const existing=tonUI.wallet;
      if(existing){
+       const raw=existing.account?.address||"";
        state.wallet=true;
-       state.walletAddress=(window.TON_CONNECT_UI.toUserFriendlyAddress ? window.TON_CONNECT_UI.toUserFriendlyAddress(existing.account?.address||"", false) : (existing.account?.address||""));
-       save();render();setTonMessage("Wallet connection restored ✓");
+       state.walletAddress=(window.TON_CONNECT_UI.toUserFriendlyAddress
+         ? window.TON_CONNECT_UI.toUserFriendlyAddress(raw,false):raw);
+       if(state.walletAddress){
+         api('/api/wallet/link',{method:'POST',body:JSON.stringify({address:state.walletAddress})}).catch(()=>{});
+         save();render();setTonMessage("Wallet connection restored ✓");
+       }
      }else{
        setTonMessage("TON Connect ready. Tap Connect Wallet above.");
      }
+
+     // Helpful diagnostics when a wallet picker is unexpectedly empty.
+     try{
+       const wallets=await tonUI.getWallets?.();
+       if(Array.isArray(wallets) && wallets.length===0){
+         setTonMessage("No TON wallets were returned. Check Telegram network access and reload.",true);
+       }
+     }catch(e){
+       console.warn("TON wallet list unavailable",e);
+     }
    }catch(err){
      console.error("TON Connect init failed",err);
+     tonConnectError=err;
      tonUI=null;
-     root.innerHTML='<div class="notice">TON Connect could not initialize. Open /tonconnect-manifest.json directly in your browser and verify it returns valid JSON over HTTPS.</div>';
+     root.innerHTML='<div class="notice">TON Connect could not initialize. Check the manifest and network connection, then use Retry Wallet Connect.</div>';
      setTonMessage("TON Connect error: "+(err?.message||"unknown error"),true);
    }finally{tonSetupPromise=null}
  })();
  return tonSetupPromise;
 }
-window.retryTonConnect=function(){
- tonUI=null;tonSetupPromise=null;
- document.getElementById("ton-connect").innerHTML="";
+window.retryTonConnect=async function(){
+ const root=document.getElementById("ton-connect");
  setTonMessage("Retrying TON Connect…");
- setupTonConnect();
+ try{
+   if(tonUI && !tonUI.wallet)await tonUI.disconnect?.();
+ }catch(e){}
+ tonUI=null;
+ tonSetupPromise=null;
+ if(root)root.innerHTML="";
+ await setupTonConnect();
 };
 window.payJoinFee=async function(){
  if(!tonUI){toast("TON Connect is not ready. Tap Retry.");return;}
  let wallet=null;try{wallet=tonUI.wallet}catch(e){}
  if(!wallet){toast("Please connect your TON wallet first.");return;}
  try{
+   // The intent is created before sendTransaction so the backend controls the amount
+   // and destination. The transaction itself remains a direct user action.
    const intent=await api('/api/payments/create',{method:'POST'});
-   const result=await tonUI.sendTransaction({validUntil:Math.floor(Date.now()/1000)+600,network:TON_MAINNET,messages:[{address:intent.destination,amount:intent.amountNanoton}]});
-   // The server verifies the actual on-chain incoming transfer; the client never marks joined by itself.
+   const tx={
+     validUntil:Math.floor(Date.now()/1000)+600,
+     network:TON_MAINNET,
+     messages:[{address:intent.destination,amount:intent.amountNanoton}]
+   };
+   const result=await tonUI.sendTransaction(tx,{skipRedirectToWallet:"ios"});
+   if(!result?.boc)throw new Error("wallet_did_not_return_boc");
+
+   // The server verifies the actual on-chain incoming transfer; the client never marks payment as verified.
    for(let i=0;i<6;i++){
      const v=await api('/api/payments/verify',{method:'POST',body:JSON.stringify({intentId:intent.id,boc:result.boc})});
      if(v.verified){await loadServerState(true);toast("✅ Payment verified. You have joined TapNova.");return;}
