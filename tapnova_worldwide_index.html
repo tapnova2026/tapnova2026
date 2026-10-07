@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#080d19">
+<meta name="mobile-web-app-capable" content="yes">
+<title>TapNova — Tap & Earn</title>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+
+<style>
+:root{
+  --bg:#080d19;--panel:#11182a;--panel2:#172139;--line:#27344e;
+  --text:#f7f9ff;--muted:#8e9ab2;--accent:#ffd54a;--accent2:#ff9d2e;
+  --green:#45e09a;--blue:#5aa7ff;--danger:#ff667d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+body{min-height:100vh;overflow-x:hidden}
+button{font:inherit;border:0;color:inherit;cursor:pointer}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.55;cursor:not-allowed}
+a{color:inherit;text-decoration:none}
+.app{width:min(520px,100%);margin:auto;padding-bottom:94px;min-height:100vh}
+.top{position:sticky;top:0;z-index:20;padding:13px 15px 8px;background:rgba(8,13,25,.95);backdrop-filter:blur(14px)}
+.topline{display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:950;font-size:22px;letter-spacing:-.5px}.brand span{color:var(--accent)}
+.user{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}
+.avatar{width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#ffd54a,#ff8f25);color:#19120a;font-weight:900}
+.balance{text-align:center;padding:13px 15px 6px}.balance-label{font-size:12px;color:var(--muted)}
+.balance h1{margin:2px 0;font-size:36px;line-height:1;font-weight:950;letter-spacing:-1px}
+.balance h1 small{font-size:14px;color:var(--accent)}.balance-sub{font-size:11px;color:var(--muted);margin-top:7px}
+.page{display:none;padding:0 14px}.page.active{display:block}
+.hero-card,.card{background:linear-gradient(180deg,#141d31,#10182a);border:1px solid var(--line);border-radius:20px}
+.hero-card{padding:15px;margin-top:9px}.card{padding:15px;margin:11px 0}
+.card-title{font-size:15px;font-weight:850;margin:0 0 10px}.muted{color:var(--muted);font-size:12px;line-height:1.5}
+.tap-zone{text-align:center;padding:13px 0 5px}
+.energy{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin:0 auto 9px;width:min(315px,90%)}
+.energy b{color:#fff}.energybar{height:7px;border-radius:99px;background:#202b40;overflow:hidden;width:min(315px,90%);margin:0 auto 18px}
+.energybar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ffd54a,#ff9b30);border-radius:inherit;transition:width .2s}
+.coin{width:205px;height:205px;border-radius:50%;margin:auto;position:relative;display:grid;place-items:center;
+touch-action:manipulation;user-select:none;background:radial-gradient(circle at 32% 24%,#fff4a8 0 5%,#ffd84f 18%,#ffb12e 48%,#e57b1f 100%);
+border:10px solid #4d3513;box-shadow:0 0 0 7px rgba(255,207,61,.08),0 20px 55px rgba(0,0,0,.45),inset 0 5px 12px rgba(255,255,255,.35);
+font-size:66px;font-weight:950;color:#7a4708}.coin:after{content:"T";width:86px;height:86px;border:7px solid #7a4708;border-radius:50%;display:grid;place-items:center;position:absolute}
+.coin span{position:relative;z-index:2;font-size:0}.tap-hint{font-size:12px;color:var(--muted);margin-top:12px}
+.float{position:fixed;z-index:50;pointer-events:none;color:var(--accent);font-size:22px;font-weight:950;animation:float .75s ease-out forwards}
+@keyframes float{0%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-75px) scale(1.25)}}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{padding:11px 8px;text-align:center;background:#0e1627;border:1px solid var(--line);border-radius:15px}
+.stat span{display:block;color:var(--muted);font-size:10px}.stat b{display:block;font-size:16px;margin-top:3px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.action{width:100%;padding:12px;border-radius:13px;background:linear-gradient(135deg,#ffd84d,#ff9b2e);color:#191208;font-weight:900}
+.action.blue{background:#2679e8;color:#fff}.action.dark{background:#222d43;color:#fff}.action.green{background:#188c5b;color:#fff}
+.task,.item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}.task:last-child,.item:last-child{border-bottom:0}
+.task-icon,.item-icon{width:39px;height:39px;border-radius:12px;background:#202b42;display:grid;place-items:center;font-size:19px;flex:none}
+.task-main,.item-main{flex:1;min-width:0}.task-main b,.item-main b{display:block;font-size:13px}.task-main span,.item-main span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.smallbtn{padding:9px 11px;border-radius:11px;background:#2679e8;font-size:11px;font-weight:850;white-space:nowrap}.smallbtn.done{background:#173c31;color:var(--green)}
+.progress{height:8px;background:#202a3d;border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd84d,#ff9a2f);transition:width .3s}
+.level-badge{display:flex;align-items:center;gap:12px;padding:13px;border-radius:16px;background:#0d1525;border:1px solid var(--line)}
+.level-icon{font-size:31px}.level-main{flex:1}.level-main b{display:block;font-size:15px}.level-main span{font-size:11px;color:var(--muted)}
+.refbox{word-break:break-all;padding:11px;border-radius:12px;background:#0a1120;border:1px dashed #3a4b69;font-size:11px;color:#b7c3d8}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);z-index:30;display:grid;grid-template-columns:repeat(5,1fr);padding:7px 6px calc(7px + env(safe-area-inset-bottom));background:rgba(8,13,25,.97);border-top:1px solid var(--line)}
+.nav button{background:transparent;color:#738099;padding:5px 1px;border-radius:12px;font-size:9px}.nav button.active{color:var(--accent);background:#1a2234}.nav em{font-style:normal;font-size:19px;display:block;margin-bottom:2px}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:80;display:none;padding:10px 14px;border-radius:12px;background:#1b2740;border:1px solid #3a4b69;font-size:12px;max-width:90%;text-align:center}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.mine{border-color:#2d9b6d}
+.power-card{background:#0e1627;border:1px solid #2a3b58;border-radius:16px;padding:13px;position:relative;overflow:hidden}
+.power-card.owned{border-color:#2d9b6d}.power-card h4{margin:5px 0;font-size:15px}.price{font-size:13px;font-weight:900;color:var(--accent)}.pph{font-size:11px;color:var(--green);margin:4px 0 9px}
+.power-card button{width:100%;padding:9px;border-radius:11px;background:#2679e8;font-size:11px;font-weight:850}
+.week-badge{position:absolute;right:8px;top:8px;background:#1e3150;color:#9ec8ff;border-radius:99px;padding:4px 7px;font-size:9px}
+.card-meta{font-size:10px;color:var(--muted);margin-top:7px}.upgrade{margin-top:7px;background:#24334b!important}
+.channel{padding:13px;border:1px solid var(--line);border-radius:16px;background:#0e1627;margin:9px 0}
+.channel-top{display:flex;align-items:center;gap:11px}.channel-icon{width:43px;height:43px;border-radius:13px;background:#17375c;display:grid;place-items:center;font-size:21px}
+.channel-main{flex:1}.channel-main b{display:block;font-size:13px}.channel-main span{font-size:11px;color:var(--muted)}
+.channel-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.channel-actions button{padding:9px;border-radius:11px;font-size:11px;font-weight:850}
+.feed{display:flex;gap:11px;padding:12px 0;border-bottom:1px solid var(--line)}.feed:last-child{border-bottom:0}
+.feed-icon{width:40px;height:40px;border-radius:13px;background:#202b42;display:grid;place-items:center;flex:none}.feed-main{flex:1}.feed-main b{font-size:12px}.feed-main p{margin:4px 0 0;font-size:11px;color:var(--muted);line-height:1.45}.feed-time{font-size:9px;color:#68758d}
+.chip{display:inline-flex;padding:5px 8px;border-radius:99px;background:#1a2940;color:#9db2ce;font-size:9px;font-weight:800;margin:3px 3px 0 0}
+.hero-community{padding:16px;border-radius:20px;background:linear-gradient(135deg,#172e4f,#202b4b);border:1px solid #31527a}
+.hero-community h2{margin:3px 0 5px}.hero-community .online{color:var(--green);font-size:10px;font-weight:800}
+.ton-status{padding:11px;border-radius:12px;background:#0a1120;word-break:break-all;font-size:11px;color:#b7c3d8;margin-top:10px}
+.ton-ok{color:var(--green)!important;border-color:#2d9b6d!important}.ton-error{color:#ff9da9!important;border-color:#70404a!important}
+.notice{padding:11px;border-radius:12px;background:#182238;border-left:3px solid var(--accent);font-size:11px;color:#c5cfdf;line-height:1.5}
+.mini{font-size:10px;color:var(--muted)}.volume-big{text-align:center;font-size:40px;font-weight:950;color:var(--accent);padding:12px 0}
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:10px}.divider{height:1px;background:var(--line);margin:10px 0}
+@media(max-width:360px){.coin{width:185px;height:185px}.balance h1{font-size:32px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="topline">
+    <div class="brand">🚀 Tap<span>Nova</span></div>
+    <div class="user"><span id="userName">Nova User</span><div class="avatar" id="avatar">N</div></div>
+  </div>
+</header>
+
+<div class="balance">
+  <div class="balance-label">Your TNV Balance</div>
+  <h1 id="balance">0 <small>TNV</small></h1>
+  <div class="balance-sub">Level <b id="levelName">Bronze</b> · +<b id="pph">0</b> PPH</div>
+</div>
+
+<main>
+<section id="home" class="page active">
+  <div class="hero-card">
+    <div class="tap-zone">
+      <div class="energy"><span>⚡ Energy</span><b><span id="energy">1000</span> / <span id="maxEnergy">1000</span></b></div>
+      <div class="energybar"><i id="energyBar"></i></div>
+      <button class="coin" id="tapButton" aria-label="Tap to earn TNV"><span>T</span></button>
+      <div class="tap-hint">TAP TO EARN · 1 tap = 1 TNV</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>Today</span><b id="todayEarned">0</b></div>
+      <div class="stat"><span>PPH</span><b id="homePPH">0</b></div>
+      <div class="stat"><span>Referrals</span><b id="homeRefs">0</b></div>
+    </div>
+    <div style="margin-top:10px;text-align:center;font-size:11px;color:var(--muted)">📊 User Volume <b id="homeVolume" style="color:var(--accent)">0</b></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎁 Daily Reward</div>
+    <div class="muted" id="dailyText">Claim your daily reward and keep your streak alive.</div>
+    <div style="margin-top:10px"><button class="action" id="dailyBtn">Claim +500 TNV</button></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚡ Boost your earnings</div>
+    <div class="grid2">
+      <button class="action dark" onclick="openPage('tasks')">🎯 Tasks</button>
+      <button class="action dark" onclick="openPage('cards')">🃏 Cards</button>
+      <button class="action dark" onclick="openPage('volume')">📊 Volume</button>
+      <button class="action dark" onclick="openPage('community')">📢 Community</button>
+    </div>
+  </div>
+</section>
+
+<section id="tasks" class="page">
+  <div class="card">
+    <div class="card-title">🎯 Earn More TNV</div>
+    <div class="muted">Daily, social and wallet tasks. Social verification should be handled by your Telegram backend in production.</div>
+    <div id="taskList" style="margin-top:6px"></div>
+  </div>
+</section>
+
+<section id="referral" class="page">
+  <div class="card">
+    <div class="card-title">👥 Invite Friends</div>
+    <div class="muted">Share your personal referral link and grow your referral level.</div>
+    <div class="refbox" id="refLink" style="margin-top:11px">Loading...</div>
+    <div class="grid2" style="margin-top:10px">
+      <button class="action" onclick="copyReferral()">📋 Copy</button>
+      <button class="action blue" onclick="shareReferral()">📤 Share</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🏅 Referral Progress</div>
+    <div class="level-badge">
+      <div class="level-icon" id="refIcon">🥉</div>
+      <div class="level-main"><b id="refLevel">Starter</b><span id="refNext">1 referral to unlock</span></div>
+      <b id="refCount">0</b>
+    </div>
+    <div class="progress" style="margin-top:12px"><i id="refProgress"></i></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🌎 Global Leaderboard</div>
+    <div class="muted">Top TapNova players worldwide.</div>
+    <button class="action blue" style="margin-top:10px" onclick="worldLeaderboard()">🏆 Load Global Ranking</button>
+    <div id="worldLeaderboard" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🎁 Referral Milestones</div>
+    <div id="refMilestones"></div>
+  </div>
+</section>
+
+<section id="airdrop" class="page">
+  <div class="card">
+    <div class="card-title">🎁 TapNova Airdrop</div>
+    <div class="muted">TON Connect is initialized only on this page. Never enter a seed phrase or private key in TapNova.</div>
+    <div id="ton-connect" style="margin-top:13px"></div>
+    <div class="ton-status" id="walletStatus">Wallet not connected</div>
+    <div id="tonHelp" class="mini" style="margin-top:8px"></div>
+    <button class="smallbtn" style="margin-top:9px" onclick="retryTonConnect()">↻ Retry Wallet Connect</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Eligibility Snapshot</div>
+    <div class="item"><div class="item-icon">💎</div><div class="item-main"><b>TNV Balance</b><span>Current earned balance</span></div><b id="airBalance">0</b></div>
+    <div class="item"><div class="item-icon">⚡</div><div class="item-main"><b>PPH</b><span>Points per hour</span></div><b id="airPPH">0</b></div>
+    <div class="item"><div class="item-icon">👥</div><div class="item-main"><b>Referrals</b><span>Invited users</span></div><b id="airRefs">0</b></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⛓️ Optional Join Fee</div>
+    <div class="muted">Join fee: <b style="color:var(--accent)">0.1 TON</b>. Your wallet must show the transaction before you approve it.</div>
+    <button class="action green" style="margin-top:11px" onclick="payJoinFee()">💎 Pay 0.1 TON & Join</button>
+    <div class="notice" style="margin-top:10px">Client-side demo only: blockchain confirmation is not verified here. Use a backend/indexer before granting verified rewards.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔐 Project Wallet</div>
+    <div class="muted">Public treasury/deposit address.</div>
+    <div class="ton-status">UQAbrZTySlI0f0km5LJkGfSndWhCOchOJfa9PPAhiyQdb9lF</div>
+  </div>
+</section>
+
+<section id="cards" class="page">
+  <div class="card">
+    <div class="row-between">
+      <div><div class="mini">CURRENT PPH</div><div style="font-size:30px;font-weight:950;color:var(--accent)" id="pphValue">0</div></div>
+      <div style="text-align:right"><div class="mini">CARD BONUS</div><b id="cardBonus">+0 PPH</b></div>
+    </div>
+    <div class="divider"></div>
+    <div class="mini" id="weeklyCardStatus">Weekly card sync ready.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🃏 Card Upgrade Center</div>
+    <div class="muted">Own a card, then upgrade its level. Upgrades increase that card's PPH without removing your existing cards.</div>
+    <div class="card-grid" id="cardGrid" style="margin-top:10px"></div>
+    <div class="notice" style="margin-top:12px">New card templates are automatically generated every 7 days for each local user. In a production economy, move card ownership and payments to your backend.</div>
+  </div>
+</section>
+
+<section id="volume" class="page">
+  <div class="card">
+    <div class="card-title">📊 User Volume</div>
+    <div class="muted">Activity volume combines taps, referrals, PPH and completed task rewards.</div>
+    <div class="volume-big" id="volumeTotal">0</div>
+    <div class="mini" style="text-align:center">Volume Points</div>
+  </div>
+  <div class="card">
+    <div class="card-title">🧮 Volume Breakdown</div>
+    <div class="item"><div class="item-icon">👆</div><div class="item-main"><b>Tap Volume</b><span>1 point per tap</span></div><b id="volTaps">0</b></div>
+    <div class="item"><div class="item-icon">👥</div><div class="item-main"><b>Referral Volume</b><span>100 points per referral</span></div><b id="volRefs">0</b></div>
+    <div class="item"><div class="item-icon">⚡</div><div class="item-main"><b>PPH Volume</b><span>10 points per PPH</span></div><b id="volPPH">0</b></div>
+    <div class="item"><div class="item-icon">🎯</div><div class="item-main"><b>Task Volume</b><span>Completed task rewards</span></div><b id="volTasks">0</b></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🏆 Volume Rank</div>
+    <div class="level-badge"><div class="level-icon" id="volumeRankIcon">🥉</div><div class="level-main"><b id="volumeRank">Starter</b><span id="volumeRankText">Keep building your activity.</span></div></div>
+  </div>
+</section>
+
+<section id="community" class="page">
+  <div class="hero-community">
+    <div class="online">● COMMUNITY HUB</div>
+    <h2>Stay close to TapNova</h2>
+    <div class="muted">Announcements, missions, events and community updates in one place.</div>
+    <div style="margin-top:10px"><span class="chip">Announcements</span><span class="chip">Events</span><span class="chip">Rewards</span><span class="chip">Updates</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📢 Official Channels</div>
+    <div id="communityChannels"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📰 Community Feed</div>
+    <div class="feed"><div class="feed-icon">🚀</div><div class="feed-main"><b>TapNova Weekly Drop</b><div class="feed-time">Today</div><p>Check the Cards section every week for the newest card release and upgrade opportunities.</p></div></div>
+    <div class="feed"><div class="feed-icon">🎁</div><div class="feed-main"><b>Community Mission</b><div class="feed-time">Active</div><p>Join the official channel, return to the app, and claim the community reward.</p></div></div>
+    <div class="feed"><div class="feed-icon">💎</div><div class="feed-main"><b>Wallet Safety</b><div class="feed-time">Pinned</div><p>TapNova will never ask for your seed phrase or private key.</p></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎁 Community Reward</div>
+    <div class="muted">Open the official channel, then return and claim the one-time +250 TNV reward. Real subscription verification should be server-side.</div>
+    <button class="action" id="communityRewardBtn" style="margin-top:11px" onclick="claimCommunityReward()">Claim +250 TNV</button>
+  </div>
+</section>
+
+<section id="levels" class="page">
+  <div class="card">
+    <div class="card-title">🏆 TapNova Levels</div>
+    <div class="muted">Level is based on your TNV balance.</div>
+    <div id="levelsList" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<section id="profile" class="page">
+  <div class="card">
+    <div class="card-title">🏆 Your Progress</div>
+    <div class="level-badge"><div class="level-icon" id="profileIcon">🥉</div><div class="level-main"><b id="profileLevel">Bronze</b><span id="profileRequirement">0 TNV</span></div></div>
+    <div class="progress" style="margin-top:12px"><i id="levelProgress"></i></div>
+    <div class="muted" id="levelNext" style="margin-top:7px">Keep tapping to reach the next level.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">📈 Statistics</div>
+    <div class="item"><div class="item-icon">👆</div><div class="item-main"><b>Total Taps</b></div><b id="statTaps">0</b></div>
+    <div class="item"><div class="item-icon">🎁</div><div class="item-main"><b>Task Bonus</b></div><b id="statTasks">0</b></div>
+    <div class="item"><div class="item-icon">🔥</div><div class="item-main"><b>Daily Streak</b></div><b id="statStreak">0</b></div>
+    <div class="item"><div class="item-icon">🃏</div><div class="item-main"><b>Owned Cards</b></div><b id="statCards">0</b></div>
+  </div>
+</section>
+</main>
+</div>
+
+<nav class="nav">
+  <button class="active" data-page="home" onclick="openPage('home',this)"><em>🏠</em>Home</button>
+  <button data-page="tasks" onclick="openPage('tasks',this)"><em>🎯</em>Earn</button>
+  <button data-page="referral" onclick="openPage('referral',this)"><em>👥</em>Friends</button>
+  <button data-page="airdrop" onclick="openPage('airdrop',this)"><em>💎</em>Wallet</button>
+  <button data-page="community" onclick="openPage('community',this)"><em>📢</em>Community</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+"use strict";
+
+const tg = window.Telegram?.WebApp || null;
+try{tg?.ready();tg?.expand();}catch(e){}
+
+const tgUser = tg?.initDataUnsafe?.user || null;
+const userId = String(tgUser?.id || "browser_user");
+const storageKey = "tapnova_unified_" + userId;
+
+const BOT_USERNAME = "TapNovaBot";
+const PROJECT_WALLET = "UQAbrZTySlI0f0km5LJkGfSndWhCOchOJfa9PPAhiyQdb9lF";
+const JOIN_FEE_NANOTON = "100000000"; // 0.1 TON
+const TON_MANIFEST = new URL("tonconnect-manifest.json", location.href).href;
+// Worldwide backend. Keep this empty until the Cloudflare Worker URL is deployed.
+const API_BASE = "";
+let apiBusy = false;
+
+async function api(path, body=null){
+  if(!API_BASE) return null;
+  if(apiBusy && path==="/api/tap") return null;
+  try{
+    apiBusy = true;
+    const payload = body ? JSON.stringify({initData: tg?.initData || "", ...body}) : null;
+    const r = await fetch(API_BASE + path, {
+      method: body ? "POST" : "GET",
+      headers: {"Content-Type":"application/json"},
+      body: payload
+    });
+    const data = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(data.error || "API error");
+    return data;
+  }catch(e){ console.warn("TapNova API:",e.message); return null; }
+  finally{ apiBusy=false; }
+}
+
+async function syncWorld(){
+  if(!API_BASE || !tg?.initData) return;
+  const data=await api("/api/me", {user:{id:Number(userId)}});
+  if(!data?.user) return;
+  state.balance=Number(data.user.balance||state.balance);
+  state.referrals=Number(data.user.referrals||state.referrals);
+  state.todayEarned=Number(data.user.todayEarned||state.todayEarned);
+  state.taps=Number(data.user.taps||state.taps);
+  state.wallet=!!data.user.walletConnected;
+  state.walletAddress=data.user.walletAddress||state.walletAddress;
+  save(); render();
+}
+
+window.worldLeaderboard=async function(){
+  const box=document.getElementById("worldLeaderboard");
+  if(!box){return;}
+  box.textContent="Loading global leaderboard…";
+  const data=await api("/api/leaderboard");
+  if(!data?.users){box.textContent=API_BASE?"Leaderboard unavailable.":"Global leaderboard activates after backend deployment.";return;}
+  box.innerHTML=data.users.map((u,i)=>`<div class="item"><div class="item-icon">${i<3?["🥇","🥈","🥉"][i]:"🌍"}</div><div class="item-main"><b>${u.firstName||"Player"}</b><span>${u.referrals||0} referrals</span></div><b>${Number(u.balance||0).toLocaleString()} TNV</b></div>`).join("");
+};
+
+
+const CHANNELS = [
+  {id:"channel",icon:"📢",name:"TapNova Official Channel",desc:"Announcements, launches & airdrop news",url:"https://t.me/TapNovaCommunity"},
+  {id:"community",icon:"👥",name:"TapNova Community",desc:"Discussion, support & community events",url:"https://t.me/TapNovaCommunity"}
+];
+
+const LEVELS = [
+ {name:"Bronze",min:0,icon:"🥉"},{name:"Silver",min:1000,icon:"🥈"},
+ {name:"Gold",min:5000,icon:"🥇"},{name:"Platinum",min:15000,icon:"💠"},
+ {name:"Diamond",min:50000,icon:"💎"},{name:"Master",min:150000,icon:"👑"},
+ {name:"Grand Master",min:500000,icon:"🏆"},{name:"Champion",min:1500000,icon:"🔥"},
+ {name:"Elite",min:5000000,icon:"⚡"},{name:"Titan",min:15000000,icon:"🛡️"},
+ {name:"Legend",min:50000000,icon:"🌟"},{name:"Nova Master",min:150000000,icon:"🚀"}
+];
+
+const TASKS = [
+ {id:"daily",icon:"⚡",title:"Daily Tap",desc:"Tap at least once today",reward:100},
+ {id:"telegram",icon:"📢",title:"Join Telegram",desc:"Open the official channel",reward:250},
+ {id:"share",icon:"📤",title:"Share TapNova",desc:"Share the project with friends",reward:200},
+ {id:"wallet",icon:"💎",title:"Connect TON Wallet",desc:"Connect inside Airdrop",reward:300}
+];
+
+const BASE_CARDS = [
+ {id:"starter",name:"Starter",icon:"🥉",price:1000,pph:5,max:5},
+ {id:"pro",name:"Pro",icon:"🥈",price:5000,pph:30,max:7},
+ {id:"elite",name:"Elite",icon:"🥇",price:15000,pph:100,max:10},
+ {id:"nova",name:"Nova",icon:"🚀",price:50000,pph:400,max:12}
+];
+
+const WEEKLY_NAMES = ["Pulse","Orbit","Spark","Galaxy","Fusion","Rocket","Cosmic","Quantum","Meteor","Infinity","Vertex","Titan"];
+const WEEKLY_ICONS = ["⚡","🪐","✨","🌌","🔷","🚀","☄️","🌀","🌠","♾️","💠","🛡️"];
+
+const defaults = {
+ balance:0,taps:0,todayEarned:0,energy:1000,lastEnergyAt:Date.now(),maxEnergy:1000,
+ referrals:0,taskBonus:0,completed:{},dailyClaim:"",streak:0,lastDay:"",
+ referredBy:"",wallet:false,walletAddress:"",joined:false,
+ communitySubscribed:false,communityReward:false,
+ ownedCards:{},weeklyCards:[],lastWeeklySync:0
+};
+
+let state = load();
+let tonUI = null;
+let tonSetupPromise = null;
+
+function load(){
+ try{
+   const candidates = [
+     localStorage.getItem(storageKey),
+     localStorage.getItem("tapnova_" + userId),
+     localStorage.getItem("tapnova_hamster_" + userId)
+   ];
+   let raw = null;
+   for(const item of candidates){
+     if(item){
+       try{ raw=JSON.parse(item); if(raw && typeof raw==="object") break; }catch(e){}
+     }
+   }
+   const s=raw&&typeof raw==="object"?raw:{};
+
+   // Migrate the three earlier state shapes into this unified state.
+   const completed = s.completed || s.completedTasks || {};
+   const legacyCards = s.ownedCards || {};
+   const migratedCards = {};
+   Object.keys(legacyCards).forEach(id=>{
+     const value=legacyCards[id];
+     migratedCards[id]=typeof value==="object"
+       ? {...value,level:Number(value.level||1)}
+       : {level:1,purchasedAt:Date.now()};
+   });
+
+   const migrated = {
+     ...defaults,...s,
+     completed,
+     ownedCards:migratedCards,
+     weeklyCards:Array.isArray(s.weeklyCards)?s.weeklyCards:[],
+     balance:Number(s.balance||0),
+     taps:Number(s.taps||0),
+     todayEarned:Number(s.todayEarned||0),
+     referrals:Number(s.referrals||0),
+     taskBonus:Number(s.taskBonus||0),
+     energy:Number(s.energy ?? defaults.energy),
+     maxEnergy:Number(s.maxEnergy ?? defaults.maxEnergy),
+     lastEnergyAt:Number(s.lastEnergyAt||Date.now())
+   };
+
+   // Old v1/v2 wallet fields were named differently.
+   migrated.wallet = !!(s.wallet ?? s.walletConnected);
+   migrated.walletAddress = s.walletAddress || "";
+   return migrated;
+ }catch(e){return {...defaults};}
+}
+function save(){try{localStorage.setItem(storageKey,JSON.stringify(state));}catch(e){}}
+function n(v){return Number(v||0).toLocaleString();}
+function dayKey(d=new Date()){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function weekIndex(d=Date.now()){return Math.floor(d/(7*86400000));}
+function toast(msg){
+ const e=document.getElementById("toast");e.textContent=msg;e.style.display="block";
+ clearTimeout(window.__toast);window.__toast=setTimeout(()=>e.style.display="none",2400);
+}
+function openTelegram(url){
+ try{
+   if(tg?.openTelegramLink && url.includes("t.me/")){tg.openTelegramLink(url);return;}
+ }catch(e){}
+ try{window.open(url,"_blank","noopener,noreferrer")}catch(e){location.href=url;}
+}
+function currentLevel(){let x=LEVELS[0];for(const l of LEVELS)if(state.balance>=l.min)x=l;return x}
+function nextLevel(){return LEVELS.find(l=>state.balance<l.min)||null}
+function upgradeCost(card){return Math.floor(card.price*(card.level||1)*0.65)}
+function cardPPH(card){
+ const level=Number(card.level||1);
+ return Math.floor(card.pph*(1+(level-1)*0.65));
+}
+function allCards(){return [...BASE_CARDS,...state.weeklyCards]}
+function syncWeeklyCards(){
+ const nowWeek=weekIndex();
+ if(!state.lastWeeklySync){
+   state.lastWeeklySync=nowWeek;
+   save();
+   return;
+ }
+ let added=0;
+ for(let w=state.lastWeeklySync+1;w<=nowWeek;w++){
+   const index=Math.abs(w)%WEEKLY_NAMES.length;
+   const exists=state.weeklyCards.some(c=>c.week===w);
+   if(exists)continue;
+   const tier=(Math.abs(w)%4);
+   state.weeklyCards.push({
+     id:"weekly_"+w,
+     week:w,
+     name:WEEKLY_NAMES[index]+" Week "+(index+1),
+     icon:WEEKLY_ICONS[index],
+     price:3000+(tier*4500)+(index*500),
+     pph:12+(tier*18)+(index*4),
+     max:8
+   });
+   added++;
+ }
+ state.lastWeeklySync=nowWeek;
+ if(added){save();toast("🃏 "+added+" new weekly card added!");}
+}
+function recalcPPH(){
+ let total=0;
+ allCards().forEach(c=>{
+   if(state.ownedCards[c.id])total+=cardPPH({...c,level:state.ownedCards[c.id].level});
+ });
+ return total;
+}
+function regenEnergy(){
+ const now=Date.now(),elapsed=Math.max(0,now-(state.lastEnergyAt||now));
+ const gain=Math.floor(elapsed/3000);
+ if(gain>0){
+   state.energy=Math.min(state.maxEnergy,state.energy+gain);
+   state.lastEnergyAt=now-(elapsed%3000);
+   save();
+ }
+}
+function getTaskVolume(){
+ return Object.keys(state.completed).reduce((sum,id)=>{
+   const t=TASKS.find(x=>x.id===id);return sum+(t?t.reward:0);
+ },0);
+}
+function getUserVolume(){return state.taps+state.referrals*100+recalcPPH()*10+getTaskVolume()}
+function render(){
+ syncWeeklyCards();regenEnergy();
+ const lv=currentLevel(),next=nextLevel(),pph=recalcPPH();
+ document.getElementById("balance").innerHTML=n(state.balance)+' <small>TNV</small>';
+ document.getElementById("levelName").textContent=lv.name;
+ document.getElementById("pph").textContent=n(pph);
+ document.getElementById("energy").textContent=n(state.energy);
+ document.getElementById("maxEnergy").textContent=n(state.maxEnergy);
+ document.getElementById("energyBar").style.width=(state.energy/state.maxEnergy*100)+"%";
+ document.getElementById("todayEarned").textContent=n(state.todayEarned);
+ document.getElementById("homePPH").textContent=n(pph);
+ document.getElementById("homeRefs").textContent=n(state.referrals);
+ document.getElementById("homeVolume").textContent=n(getUserVolume());
+ renderDaily();renderTasks();renderReferral();renderAirdrop();renderCards();renderVolume();renderCommunity();renderLevels();renderProfile();
+}
+function renderDaily(){
+ const claimed=state.dailyClaim===dayKey(),btn=document.getElementById("dailyBtn");
+ btn.disabled=claimed;btn.textContent=claimed?"✓ Claimed Today":"Claim +500 TNV";
+ document.getElementById("dailyText").textContent=claimed?
+ "Daily reward claimed. Come back tomorrow to continue your streak.":"Claim your daily reward and keep your streak alive.";
+}
+function renderTasks(){
+ const box=document.getElementById("taskList");box.innerHTML="";
+ TASKS.forEach(t=>{
+   const done=!!state.completed[t.id],row=document.createElement("div");row.className="task";
+   row.innerHTML='<div class="task-icon">'+t.icon+'</div><div class="task-main"><b>'+t.title+'</b><span>'+t.desc+' · +'+n(t.reward)+' TNV</span></div>';
+   const b=document.createElement("button");b.className="smallbtn"+(done?" done":"");b.disabled=done;b.textContent=done?"✓ Done":"Claim";
+   b.onclick=()=>completeTask(t.id);row.appendChild(b);box.appendChild(row);
+ });
+}
+function renderReferral(){
+ const code=tgUser?.id||userId;
+ const link=BOT_USERNAME?"https://t.me/"+BOT_USERNAME+"?startapp=ref_"+encodeURIComponent(code):
+ location.origin+location.pathname+"?startapp=ref_"+encodeURIComponent(code);
+ document.getElementById("refLink").textContent=link;
+ document.getElementById("refCount").textContent=n(state.referrals);
+ const levels=[{count:1,name:"Starter",icon:"🥉",bonus:500},{count:5,name:"Builder",icon:"🥈",bonus:1500},{count:10,name:"Leader",icon:"🥇",bonus:3500},{count:20,name:"Master",icon:"💎",bonus:10000}];
+ let cur=null;for(const x of levels)if(state.referrals>=x.count)cur=x;
+ const next=levels.find(x=>state.referrals<x.count);
+ document.getElementById("refLevel").textContent=cur?cur.name:"Starter";
+ document.getElementById("refIcon").textContent=cur?cur.icon:"🔒";
+ document.getElementById("refNext").textContent=next?(next.count-state.referrals)+" more referral(s) to unlock "+next.name:"All milestones reached";
+ const prev=cur?.count||0,target=next?.count||prev;
+ document.getElementById("refProgress").style.width=next?Math.min(100,Math.max(0,((state.referrals-prev)/(target-prev))*100))+"%":"100%";
+ const box=document.getElementById("refMilestones");box.innerHTML="";
+ levels.forEach(x=>{
+   const row=document.createElement("div");row.className="item";
+   row.innerHTML='<div class="item-icon">'+x.icon+'</div><div class="item-main"><b>'+x.name+' · '+x.count+' referrals</b><span>Milestone bonus +'+n(x.bonus)+' TNV</span></div><b>'+(state.referrals>=x.count?"✓":"🔒")+'</b>';
+   box.appendChild(row);
+ });
+}
+function renderAirdrop(){
+ const pph=recalcPPH();
+ document.getElementById("airBalance").textContent=n(state.balance);
+ document.getElementById("airPPH").textContent=n(pph);
+ document.getElementById("airRefs").textContent=n(state.referrals);
+ const e=document.getElementById("walletStatus");
+ if(state.wallet){
+   e.textContent="TON Wallet connected ✓"+(state.walletAddress?" · "+state.walletAddress:"");
+   e.classList.add("ton-ok");e.classList.remove("ton-error");
+ }else{
+   e.textContent="Wallet not connected";e.classList.remove("ton-ok");
+ }
+}
+function renderCards(){
+ const grid=document.getElementById("cardGrid");grid.innerHTML="";
+ const cards=allCards();
+ cards.forEach(card=>{
+   const owned=state.ownedCards[card.id],level=owned?.level||0,activePPH=owned?cardPPH({...card,level}):0;
+   const box=document.createElement("div");box.className="power-card"+(owned?" owned":"");
+   if(card.week)box.innerHTML+='<div class="week-badge">WEEKLY</div>';
+   box.innerHTML+='<div style="font-size:25px">'+card.icon+'</div><h4>'+card.name+'</h4>'+
+     (card.week?'<div class="card-meta">Auto-added · Week '+(card.week%100000)+'</div>':'<div class="card-meta">Core card</div>')+
+     '<div class="price">'+n(card.price)+' TNV</div><div class="pph">+'+n(card.pph)+' base PPH</div>'+
+     '<div class="card-meta">'+(owned?"Level "+level+" · Active +"+n(activePPH)+" PPH":"Not owned")+'</div>';
+   const buy=document.createElement("button");
+   buy.textContent=owned?"✓ Owned":"Buy Card";buy.disabled=!!owned;
+   buy.onclick=()=>buyCard(card.id);box.appendChild(buy);
+   if(owned && level<card.max){
+     const up=document.createElement("button");up.className="upgrade";
+     up.textContent="Upgrade → Lv "+(level+1)+" · "+n(upgradeCost({...card,level}))+" TNV";
+     up.onclick=()=>upgradeCard(card.id);box.appendChild(up);
+   }else if(owned){
+     const max=document.createElement("button");max.className="upgrade";max.textContent="★ Max Level";max.disabled=true;box.appendChild(max);
+   }
+   grid.appendChild(box);
+ });
+ const pph=recalcPPH();
+ document.getElementById("pphValue").textContent=n(pph);
+ document.getElementById("cardBonus").textContent="+"+n(pph)+" PPH";
+ const current=weekIndex(),last=state.lastWeeklySync;
+ const weeks=Math.max(0,current-last);
+ document.getElementById("weeklyCardStatus").textContent=weeks===0?
+ "✓ Weekly card system synced. New cards are added automatically every 7 days.":
+ "⏳ Weekly sync pending: "+weeks+" week(s).";
+}
+window.buyCard=function(id){
+ const c=allCards().find(x=>x.id===id);if(!c||state.ownedCards[id])return;
+ if(state.balance<c.price){toast("Not enough TNV.");return;}
+ state.balance-=c.price;state.ownedCards[id]={level:1,purchasedAt:Date.now()};save();render();
+ toast("🃏 "+c.name+" activated · +"+n(cardPPH({...c,level:1}))+" PPH");
+};
+window.upgradeCard=function(id){
+ const c=allCards().find(x=>x.id===id),owned=state.ownedCards[id];
+ if(!c||!owned)return;
+ const level=owned.level||1;if(level>=c.max){toast("This card is already max level.");return;}
+ const cost=upgradeCost({...c,level});
+ if(state.balance<cost){toast("Not enough TNV for this upgrade.");return;}
+ state.balance-=cost;owned.level=level+1;owned.upgradedAt=Date.now();save();render();
+ toast("⬆️ "+c.name+" upgraded to Level "+owned.level+" · +"+n(cardPPH({...c,level:owned.level}))+" PPH");
+};
+function renderVolume(){
+ const total=getUserVolume();
+ document.getElementById("volumeTotal").textContent=n(total);
+ document.getElementById("volTaps").textContent=n(state.taps);
+ document.getElementById("volRefs").textContent=n(state.referrals*100);
+ document.getElementById("volPPH").textContent=n(recalcPPH()*10);
+ document.getElementById("volTasks").textContent=n(getTaskVolume());
+ const ranks=[{name:"Starter",icon:"🥉",min:0},{name:"Builder",icon:"🥈",min:1000},{name:"Rising Star",icon:"🥇",min:5000},{name:"Leader",icon:"💎",min:15000},{name:"Master",icon:"👑",min:50000},{name:"Legend",icon:"🔥",min:150000},{name:"Nova Titan",icon:"🚀",min:500000}];
+ let r=ranks[0];for(const x of ranks)if(total>=x.min)r=x;
+ document.getElementById("volumeRankIcon").textContent=r.icon;
+ document.getElementById("volumeRank").textContent=r.name;
+ document.getElementById("volumeRankText").textContent=n(total)+" Volume Points";
+}
+function renderCommunity(){
+ const box=document.getElementById("communityChannels");box.innerHTML="";
+ CHANNELS.forEach(ch=>{
+   const row=document.createElement("div");row.className="channel";
+   row.innerHTML='<div class="channel-top"><div class="channel-icon">'+ch.icon+'</div><div class="channel-main"><b>'+ch.name+'</b><span>'+ch.desc+'</span></div><span class="online">●</span></div>';
+   const actions=document.createElement("div");actions.className="channel-actions";
+   const open=document.createElement("button");open.className="action blue";open.textContent="Open";
+   open.onclick=()=>openTelegram(ch.url);
+   const sub=document.createElement("button");sub.className="action dark";
+   sub.textContent=ch.id==="channel"?(state.communitySubscribed?"✓ Subscribed":"Subscribe"):"Join";
+   sub.onclick=()=>{openTelegram(ch.url);if(ch.id==="channel"){state.communitySubscribed=true;save();renderCommunity();toast("📢 Channel opened. Subscribe, then claim reward.");}};
+   actions.appendChild(open);actions.appendChild(sub);row.appendChild(actions);box.appendChild(row);
+ });
+ const rb=document.getElementById("communityRewardBtn");
+ rb.textContent=state.communityReward?"✓ Reward Claimed":"Claim +250 TNV";
+ rb.disabled=!!state.communityReward||!state.communitySubscribed;
+}
+window.subscribeChannel=function(){
+ state.communitySubscribed=true;save();renderCommunity();openTelegram(CHANNELS[0].url);
+};
+window.openCommunity=function(){openTelegram(CHANNELS[1].url)};
+window.claimCommunityReward=function(){
+ if(state.communityReward)return;
+ if(!state.communitySubscribed){toast("Subscribe to the official channel first.");return;}
+ state.communityReward=true;state.balance+=250;state.taskBonus+=250;state.todayEarned+=250;save();render();toast("📢 +250 TNV community reward!");
+};
+function renderLevels(){
+ const box=document.getElementById("levelsList");box.innerHTML="";
+ const current=currentLevel();
+ LEVELS.forEach(l=>{
+   const row=document.createElement("div");row.className="level-badge";row.style.margin="8px 0";
+   row.style.borderColor=l.name===current.name?"#5aa7ff":"var(--line)";
+   row.innerHTML='<div class="level-icon">'+l.icon+'</div><div class="level-main"><b>'+l.name+'</b><span>'+n(l.min)+' TNV required</span></div><b>'+ (state.balance>=l.min?"✓":"🔒")+'</b>';
+   box.appendChild(row);
+ });
+}
+function renderProfile(){
+ const lv=currentLevel(),next=nextLevel(),pph=recalcPPH();
+ document.getElementById("profileIcon").textContent=lv.icon;
+ document.getElementById("profileLevel").textContent=lv.name;
+ document.getElementById("profileRequirement").textContent=n(lv.min)+" TNV";
+ document.getElementById("statTaps").textContent=n(state.taps);
+ document.getElementById("statTasks").textContent=n(state.taskBonus);
+ document.getElementById("statStreak").textContent=n(state.streak);
+ document.getElementById("statCards").textContent=n(Object.keys(state.ownedCards).length);
+ if(next){
+   const span=next.min-lv.min,done=state.balance-lv.min;
+   document.getElementById("levelProgress").style.width=Math.max(0,Math.min(100,done/span*100))+"%";
+   document.getElementById("levelNext").textContent=n(next.min-state.balance)+" TNV to "+next.name+" · "+n(pph)+" PPH";
+ }else{
+   document.getElementById("levelProgress").style.width="100%";
+   document.getElementById("levelNext").textContent="🏆 Maximum level reached · "+n(pph)+" PPH";
+ }
+}
+window.openPage=function(id,btn){
+ document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+ document.getElementById(id)?.classList.add("active");
+ document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
+ const nav=btn||document.querySelector('.nav button[data-page="'+id+'"]');nav?.classList.add("active");
+ window.scrollTo({top:0,behavior:"smooth"});
+ if(id==="airdrop" && !tonUI) setupTonConnect();
+};
+function tap(e){
+ regenEnergy();
+ if(state.energy<=0){toast("⚡ Energy is empty. It regenerates automatically.");return;}
+ state.energy--;state.taps++;state.balance++;state.todayEarned++;state.lastEnergyAt=Date.now();save();render();
+ const r=document.createElement("div");r.className="float";r.textContent="+1 TNV";
+ r.style.left=(e.clientX||innerWidth/2)+"px";r.style.top=(e.clientY||innerHeight/2)+"px";
+ document.body.appendChild(r);setTimeout(()=>r.remove(),750);
+}
+document.getElementById("tapButton").addEventListener("pointerdown",tap);
+
+document.getElementById("dailyBtn").onclick=()=>{
+ const today=dayKey();if(state.dailyClaim===today)return;
+ const yesterday=dayKey(new Date(Date.now()-86400000));
+ state.streak=state.lastDay===yesterday?state.streak+1:1;
+ state.lastDay=today;state.dailyClaim=today;state.balance+=500;state.taskBonus+=500;state.todayEarned+=500;
+ save();render();toast("🎁 +500 TNV daily reward!");
+};
+
+window.completeTask=function(id){
+ const t=TASKS.find(x=>x.id===id);if(!t||state.completed[id])return;
+ if(id==="daily" && state.taps<1){toast("Tap at least once first.");return;}
+ if(id==="telegram"){openTelegram(CHANNELS[0].url);}
+ if(id==="share"){shareReferral();return;}
+ if(id==="wallet"){
+   if(!state.wallet){openPage("airdrop");toast("Connect your TON wallet first.");return;}
+ }
+ state.completed[id]=true;state.balance+=t.reward;state.taskBonus+=t.reward;state.todayEarned+=t.reward;
+ save();render();toast("+"+n(t.reward)+" TNV added!");
+};
+
+function referralLink(){
+ const code=tgUser?.id||userId;
+ return BOT_USERNAME?"https://t.me/"+BOT_USERNAME+"?startapp=ref_"+encodeURIComponent(code):
+ location.origin+location.pathname+"?startapp=ref_"+encodeURIComponent(code);
+}
+window.copyReferral=async function(){
+ try{await navigator.clipboard.writeText(referralLink());toast("Referral link copied!");}
+ catch(e){toast("Copy failed — long press the link to copy.");}
+};
+window.shareReferral=function(){
+ const link=referralLink(),text="Join TapNova and start tapping for TNV!";
+ const url="https://t.me/share/url?url="+encodeURIComponent(link)+"&text="+encodeURIComponent(text);
+ try{if(tg?.openTelegramLink){tg.openTelegramLink(url);return;}}catch(e){}
+ if(navigator.share)navigator.share({title:"TapNova",text,url}).catch(()=>{});else copyReferral();
+};
+
+function setTonMessage(text,error=false){
+ const e=document.getElementById("tonHelp");if(!e)return;
+ e.textContent=text;e.className=error?"mini ton-error":"mini";
+}
+async function setupTonConnect(){
+ if(tonSetupPromise)return tonSetupPromise;
+ tonSetupPromise=(async()=>{
+   const root=document.getElementById("ton-connect");
+   if(!root)return;
+   root.innerHTML="";
+   if(!window.TON_CONNECT_UI){
+     root.innerHTML='<div class="notice">TON Connect library is not available. Check internet access and reload the Mini App.</div>';
+     setTonMessage("TON Connect UI script failed to load.",true);
+     tonSetupPromise=null;return;
+   }
+   try{
+     // A single TonConnectUI instance is created only once. This avoids duplicate button roots.
+     tonUI=new TON_CONNECT_UI.TonConnectUI({
+       manifestUrl:TON_MANIFEST,
+       buttonRootId:"ton-connect",
+       uiPreferences:{theme:"DARK",borderRadius:"s"}
+     });
+     if(typeof tonUI.onStatusChange==="function"){
+       tonUI.onStatusChange(wallet=>{
+         if(wallet){
+           state.wallet=true;
+           state.walletAddress=wallet.account?.address||"";
+           api("/api/wallet",{address:state.walletAddress});
+           if(!state.completed.wallet){
+             state.completed.wallet=true;state.balance+=300;state.taskBonus+=300;state.todayEarned+=300;
+             toast("💎 Wallet connected · +300 TNV");
+           }else toast("TON Wallet connected!");
+         }else{
+           state.wallet=false;state.walletAddress="";
+         }
+         save();render();
+       });
+     }
+     // Restore already-connected wallet if the SDK exposes it.
+     try{
+       const existing=tonUI.wallet;
+       if(existing){state.wallet=true;state.walletAddress=existing.account?.address||"";save();render();}
+     }catch(e){}
+     setTonMessage("TON Connect ready. Tap the button above to connect your wallet.");
+   }catch(err){
+     console.error("TON Connect init failed",err);
+     tonUI=null;
+     root.innerHTML='<div class="notice">TON Connect could not initialize. Check that tonconnect-manifest.json is publicly reachable over HTTPS.</div>';
+     setTonMessage("Manifest or TON Connect configuration could not be loaded.",true);
+   }finally{tonSetupPromise=null}
+ })();
+ return tonSetupPromise;
+}
+window.retryTonConnect=function(){
+ tonUI=null;tonSetupPromise=null;
+ document.getElementById("ton-connect").innerHTML="";
+ setTonMessage("Retrying TON Connect…");
+ setupTonConnect();
+};
+window.payJoinFee=async function(){
+ if(!tonUI){toast("TON Connect is not ready. Tap Retry.");return;}
+ let wallet=null;try{wallet=tonUI.wallet}catch(e){}
+ if(!wallet){toast("Please connect your TON wallet first.");return;}
+ try{
+   const result=await tonUI.sendTransaction({
+     validUntil:Math.floor(Date.now()/1000)+600,
+     network:"-239",
+     messages:[{address:PROJECT_WALLET,amount:JOIN_FEE_NANOTON}]
+   });
+   state.joined=true;save();render();toast("Transaction submitted successfully.");
+   console.log("TON transaction result:",result);
+   api("/api/payment/submitted",{boc:result?.boc||""});
+ }catch(e){console.error(e);toast("Payment cancelled or failed.");}
+};
+function handleReferralStart(){
+ try{
+   const p=tg?.initDataUnsafe?.start_param||new URLSearchParams(location.search).get("startapp");
+   if(p?.startsWith("ref_")&&!state.referredBy){
+     const ref=p.slice(4);if(ref&&ref!==userId){state.referredBy=ref;save();}
+   }
+ }catch(e){}
+}
+
+document.getElementById("userName").textContent=tgUser?.first_name||"Nova User";
+document.getElementById("avatar").textContent=(tgUser?.first_name||"N").slice(0,1).toUpperCase();
+handleReferralStart();
+syncWeeklyCards();
+render();
+syncWorld();
+
+// Energy and weekly-card checks continue while the Mini App is open.
+setInterval(()=>{regenEnergy();syncWeeklyCards();render();},5000);
+})();
+</script>
+</body>
+</html>
