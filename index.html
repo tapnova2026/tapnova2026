@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>TapNova — Tap & Earn</title>
 
-<script src="https://telegram.org/js/telegram-web-app.js?64"></script>
+<script src="https://telegram.org/js/telegram-web-app.js?63"></script>
 <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 
 <style>
@@ -333,20 +333,7 @@ font-size:66px;font-weight:950;color:#7a4708}.coin:after{content:"T";width:86px;
 
 const tg = window.Telegram?.WebApp || null;
 try{tg?.ready();tg?.expand();}catch(e){}
-  
-  setTimeout(()=>{
-  const tgStatus = tg ? "YES" : "NO";
-  const initStatus = tg?.initData ? "YES" : "NO";
-  const userStatus = tg?.initDataUnsafe?.user ? "YES" : "NO";
-
-  alert(
-    "TapNova Telegram Diagnostic\n\n" +
-    "Telegram WebApp: " + tgStatus + "\n" +
-    "initData available: " + initStatus + "\n" +
-    "Telegram user available: " + userStatus
-  );
-},1500);
-  
+     
   async function waitForTelegramInitData(timeoutMs=3000){
     if(tg?.initData) return true;
     const start=Date.now();
@@ -357,7 +344,6 @@ try{tg?.ready();tg?.expand();}catch(e){}
     }
     return !!tg?.initData;
   }
-
 const tgUser = tg?.initDataUnsafe?.user || null;
 const userId = String(tgUser?.id || "browser_user");
 const storageKey = "tapnova_unified_" + userId;
