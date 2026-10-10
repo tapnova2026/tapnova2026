@@ -333,6 +333,20 @@ font-size:66px;font-weight:950;color:#7a4708}.coin:after{content:"T";width:86px;
 
 const tg = window.Telegram?.WebApp || null;
 try{tg?.ready();tg?.expand();}catch(e){}
+  
+  setTimeout(()=>{
+  const tgStatus = tg ? "YES" : "NO";
+  const initStatus = tg?.initData ? "YES" : "NO";
+  const userStatus = tg?.initDataUnsafe?.user ? "YES" : "NO";
+
+  alert(
+    "TapNova Telegram Diagnostic\n\n" +
+    "Telegram WebApp: " + tgStatus + "\n" +
+    "initData available: " + initStatus + "\n" +
+    "Telegram user available: " + userStatus
+  );
+},1500);
+  
   async function waitForTelegramInitData(timeoutMs=3000){
     if(tg?.initData) return true;
     const start=Date.now();
