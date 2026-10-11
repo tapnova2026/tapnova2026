@@ -73,9 +73,53 @@ let s={...defaults};
 try{s={...defaults,...JSON.parse(localStorage.getItem('tapnova-boinker-energy-shop')||'{}')}}catch(e){}
 if(!Array.isArray(s.spinHistory))s.spinHistory=[];
 let busy=false, spinning=false;
-function tg(){return window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null}
-function initData(){const w=tg();return w&&typeof w.initData==='string'?w.initData:''}
-function user(){try{return tg()?.initDataUnsafe?.user||null}catch(e){return null}}
+function tg(){
+  return (window.Telegram && window.Telegram.WebApp)
+    ? window.Telegram.WebApp
+    : null;
+}
+
+function initData(){
+  const w = tg();
+  return w && typeof w.initData === 'string'
+    ? w.initData
+    : '';
+}
+
+function user(){
+  try{
+    return tg()?.initDataUnsafe?.user || null;
+  }catch(e){
+    return null;
+  }
+}
+
+async function waitForTelegram(timeoutMs = 10000){
+  const started = Date.now();
+
+  while(Date.now() - started < timeoutMs){
+
+    const w = tg();
+
+    if(w){
+      try{
+        w.ready();
+        w.expand();
+      }catch(e){}
+
+      if(
+        typeof w.initData === 'string' &&
+        w.initData.trim() !== ''
+      ){
+        return w;
+      }
+    }
+
+    await new Promise(resolve => setTimeout(resolve,150));
+  }
+
+  return tg();
+}
 function dayKey(){const d=new Date(Date.now()+345*60000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0')}
 function save(){try{localStorage.setItem('tapnova-boinker-energy-shop',JSON.stringify(s))}catch(e){}}
 function toast(t){$('toast').textContent=t;$('toast').style.display='block';clearTimeout(window.__tnToast);window.__tnToast=setTimeout(()=>$('toast').style.display='none',2600)}
