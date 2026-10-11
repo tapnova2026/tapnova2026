@@ -4,6 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#101326"><title>TapNova — BOINKER Model</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 <style>
 :root{--bg:#101326;--panel:#1b203b;--panel2:#242b4b;--text:#f5f6ff;--muted:#aab2d4;--lime:#c8ff4d;--blue:#79a7ff;--pink:#ff83c6;--gold:#ffcb69;--line:#343d63;--red:#ff7285}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#29305a 0,#101326 58%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;padding:14px 14px 94px;max-width:560px;margin:auto}
@@ -21,7 +22,18 @@ button{border:0;border-radius:13px;padding:13px 14px;font-weight:800;font-size:1
 </style>
 </head>
 <body>
-<header><div class="brand">🚀 TAP<span>NOVA</span></div><div class="pill" id="conn">Checking Telegram…</div></header>
+<header>
+  <div class="brand">🚀 TAP<span>NOVA</span></div>
+  <div class="pill" id="conn">Checking Telegram…</div>
+</header>
+
+<div class="card">
+  <div class="title">👛 TON Wallet</div>
+  <div id="ton-connect"></div>
+  <div id="ton-wallet-status" class="muted" style="margin-top:10px">
+    Connect your TON wallet to continue.
+  </div>
+</div>
 
 <section class="page active" id="home">
 <div class="card"><div class="eyebrow">Your space stash</div><div class="balance"><span id="balance">0</span> <small>TNV</small></div><div class="muted">Collect points, upgrade your farm, buy Spin Energy, and return every day.</div>
@@ -294,7 +306,116 @@ $("recheck").onclick=sync;
 
 paint();renderExtras();
 (async()=>{const ok=await sync();if(ok!==false)await loadPackages()})();
+<script>
+(() => {
+  "use strict";
 
+  const MANIFEST =
+    "https://tapnova2026.github.io/tapnova2026/tonconnect-manifest.json";
+
+  const status = document.getElementById("ton-wallet-status");
+
+  function showStatus(message) {
+    if (status) status.textContent = message;
+  }
+
+  async function initTonWallet() {
+    if (!window.TON_CONNECT_UI) {
+      showStatus("TON Connect SDK load भएन। Page reload गरेर फेरि प्रयास गर्नुहोस्।");
+      return;
+    }
+
+    try {
+      const tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: MANIFEST,
+        buttonRootId: "ton-connect"
+      });
+
+      tonConnectUI.onStatusChange(async wallet => {
+        if (!wallet) {
+          showStatus("Wallet connected छैन। Connect Wallet थिच्नुहोस्।");
+          return;
+        }
+
+        const account = wallet.account;
+        const rawAddress = account.address;
+
+        let address = rawAddress;
+
+        try {
+          if (window.TON_CONNECT_UI.toUserFriendlyAddress) {
+            address =
+              window.TON_CONNECT_UI.toUserFriendlyAddress(rawAddress);
+          }
+        } catch (e) {
+          console.warn("Address formatting:", e);
+        }
+
+        showStatus(
+          "✅ Wallet Connected\n" +
+          "Address: " + address
+        );
+
+        // Wallet address लाई Cloudflare Worker मा सुरक्षित गर्न अनुरोध
+        try {
+          const tg = window.Telegram?.WebApp;
+          const initData = tg?.initData || "";
+
+          if (initData) {
+            const response = await fetch(
+              "https://tapnova-api.verikarnalicollege.workers.dev/api/wallet",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Telegram-Init-Data": initData
+                },
+                body: JSON.stringify({
+                  wallet_address: address,
+                  initData
+                })
+              }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok || result.ok === false) {
+              showStatus(
+                "Wallet connected, तर server मा save भएन: " +
+                (result.error || response.status)
+              );
+            } else {
+              showStatus(
+                "✅ Wallet Connected & Saved\n" +
+                "Address: " + address
+              );
+            }
+          } else {
+            showStatus(
+              "Wallet connected छ, तर Telegram authentication data भेटिएन।"
+            );
+          }
+        } catch (error) {
+          showStatus(
+            "Wallet connected छ, तर server connection असफल भयो: " +
+            error.message
+          );
+        }
+      });
+
+      window.tapNovaTonConnect = tonConnectUI;
+
+    } catch (error) {
+      console.error("TON Connect initialization failed:", error);
+      showStatus("TON Connect Error: " + error.message);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initTonWallet);
+  } else {
+    initTonWallet();
+  }
 })();
 </script>
 </body>
