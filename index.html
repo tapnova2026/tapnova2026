@@ -38,7 +38,7 @@ button{border:0;border-radius:13px;padding:13px 14px;font-weight:800;font-size:1
 <div class="card game"><div class="eyebrow">Tap to collect</div><div class="orb" id="orb" role="button" aria-label="Tap to collect">🪐</div><div class="title">Space Farm</div><div class="tap-hint">Tap the planet to collect +1 TNV (local demo points)</div><div class="progress"><div id="energybar"></div></div><div class="muted" style="margin-top:6px"><span id="energy">1000</span> / 1000 tap energy</div></div>
 <div class="card"><div class="row"><div><div class="title">🎁 Daily Supply Drop</div><div class="muted">Claim once per day · server verified</div></div><div style="font-weight:900;color:var(--lime)">+500 TNV</div></div><button id="dailyBtn">Claim +500 TNV</button><div id="dailyMsg" class="muted" style="margin-top:8px">Checking claim status when connected…</div></div>
 <div class="card"><div class="title">🛰️ Upgrade your farm</div><div class="muted">Upgrade your tap power using TNV.</div><div class="reward"><div class="rewardicon">⚡</div><div class="rewardinfo"><b>Solar Booster</b><span id="upgradeText">Level 0 · Cost 100 TNV · +1 per tap</span></div><button id="upgradeBtn">Upgrade</button></div></div>
-<div class="card"><div class="row"><div><div class="title">⚡ Daily Free Energy</div><div class="muted">Claim once every day · +25 Spin Energy</div></div><div style="font-weight:900;color:var(--lime)">+25</div></div><button id="freeEnergyBtn">Claim +25 Energy</button><div id="freeEnergyMsg" class="muted" style="margin-top:8px">Daily free Energy is available once per day.</div></div>
+<div class="card"><div class="row"><div><div class="title">⚡ Daily Free Energy</div><div class="muted">Claim once every day · +10 Spin Energy</div></div><div style="font-weight:900;color:var(--lime)">+25</div></div><button id="freeEnergyBtn">Claim +25 Energy</button><div id="freeEnergyMsg" class="muted" style="margin-top:8px">Daily free Energy is available once per day.</div></div>
 <div class="card"><div class="title">🚀 Boost Energy</div><div class="muted">Temporary boost packages increase your tap earning power. TON packages require backend transaction verification.</div><div class="boostgrid"><div class="boost"><b>2× Boost</b><span>1 hour · 0.10 TON</span><button class="tonBoost" data-ton="0.10" data-mult="2" data-hours="1">Buy Boost</button></div><div class="boost"><b>3× Boost</b><span>3 hours · 0.25 TON</span><button class="tonBoost" data-ton="0.25" data-mult="3" data-hours="3">Buy Boost</button></div><div class="boost"><b>5× Boost</b><span>6 hours · 0.50 TON</span><button class="tonBoost" data-ton="0.50" data-mult="5" data-hours="6">Buy Boost</button></div><div class="boost"><b>10× Boost</b><span>24 hours · 1.00 TON</span><button class="tonBoost" data-ton="1.00" data-mult="10" data-hours="24">Buy Boost</button></div></div><div id="boostStatus" class="muted" style="margin-top:9px">No active boost.</div></div>
 </section>
 
@@ -230,24 +230,37 @@ function renderExtras(){
    :'No active boost.';
 
  $('freeEnergyBtn').disabled=s.freeEnergyClaim===dayKey();
- $('freeEnergyBtn').textContent=s.freeEnergyClaim===dayKey()?'✓ Free Energy Claimed Today':'Claim +25 Energy';
+ $('freeEnergyBtn').textContent=s.freeEnergyClaim===dayKey()?'✓ Free Energy Claimed Today':'Claim +10 Energy';
 }
 
-async function api(path,body){
+async function api(path,body,method='POST'){
  const data=initData();
- if(!data)throw new Error('Telegram initData is missing. Launch the app using the bot’s Mini App button, not a plain website link.');
- const res=await fetch(API+path,{
-   method:'POST',
-   headers:{
-     'Content-Type':'application/json',
-     'X-Telegram-Init-Data':data
-   },
-   body:JSON.stringify({initData:data,...(body||{})})
- });
+ if(!data)throw new Error('Telegram initData is empty. Open TapNova using the Telegram bot Open App button. A normal website link cannot authenticate a player.');
+ const options={method,headers:{'X-Telegram-Init-Data':data}};
+ if(method!=='GET'){
+   options.headers['Content-Type']='application/json';
+   options.body=JSON.stringify({initData:data,...(body||{})});
+ }
+ const res=await fetch(API+path,options);
  let j={};
  try{j=await res.json()}catch(e){}
  if(!res.ok||j.ok===false)throw new Error(j.error||('API request failed ('+res.status+')'));
  return j;
+}
+function syncServerState(j){
+ const u=j?.user||{},p=j?.player||{};
+ if(u.balance!==undefined)s.balance=Number(u.balance||0);
+ if(p.spin_energy!==undefined)s.spinEnergy=Number(p.spin_energy||0);
+ if(p.spins!==undefined)s.spins=Number(p.spins||0);
+ if(p.active_days!==undefined)s.activeDays=Number(p.active_days||0);
+ if(p.active_boost!==undefined)s.activeBoost=Number(p.active_boost||1);
+ if(p.boost_until!==undefined)s.boostUntil=Number(p.boost_until||0);
+ if(j.referrals!==undefined)s.referrals=Number(j.referrals||0);
+ save();paint();renderExtras();
+}
+async function refreshServerState(){
+ const j=await api('/api/me',null,'GET');
+ syncServerState(j);return j;
 }
 
 async function auth(){
@@ -264,12 +277,7 @@ async function auth(){
    try{
      const j=await api('/api/auth',{start_param:w?.initDataUnsafe?.start_param||''});
      if(j.user){
-       s.balance=Number(j.user.balance||0);
-       s.streak=Number(j.streak||s.streak||0);
-       s.referrals=Number(j.referrals||s.referrals||0);
-       s.activeDays=Number(j.active_days||s.activeDays||0);
-       s.spins=Number(j.spins||s.spins||0);
-       save();paint();renderExtras();
+       syncServerState(j);
        $('authstatus').textContent='Cloudflare authentication successful';
        $('conn').textContent='Connected ✓';
      }
@@ -301,11 +309,9 @@ $('dailyBtn').onclick=async()=>{
  $('dailyBtn').textContent='⏳ Verifying…';
  try{
    const j=await api('/api/reward/daily',{});
-   if(j.user)s.balance=Number(j.user.balance||0);
-   s.lastClaim=dayKey();
-   s.streak=Number(j.streak||s.streak+1);
-   save();paint();
-   toast(j.claimed===false?'Daily reward already claimed.':'🎁 +'+Number(j.amount||500)+' TNV reward confirmed!');
+   await refreshServerState();
+   s.lastClaim=dayKey();save();paint();
+   toast('🎁 +'+Number(j.amount||500)+' TNV reward confirmed by server!');
    $('dailyMsg').textContent=j.claimed===false?'Already claimed today.':'Reward confirmed by server.';
  }catch(e){
    $('dailyBtn').disabled=false;
@@ -332,41 +338,44 @@ function spinReward(){
  return 250;
 }
 
-$('spinBtn').onclick=()=>{
+$('spinBtn').onclick=async()=>{
  if(spinning)return;
+ if(!initData()){toast('Open TapNova from the Telegram bot Open App button first.');return}
  if(s.spinEnergy<1){toast('⚡ Buy Spin Energy first.');return}
- spinning=true;s.spinEnergy--;s.spins++;save();paint();
- const prize=spinReward();
+ spinning=true;paint();
  const turns=5+Math.floor(Math.random()*3);
  $('wheel').style.transform='rotate('+(turns*360+Math.floor(Math.random()*360))+'deg)';
- $('spinMsg').textContent='Spinning…';
- setTimeout(()=>{
+ $('spinMsg').textContent='Checking spin with TapNova server…';
+ try{
+   const j=await api('/api/game/spin',{});
+   await new Promise(resolve=>setTimeout(resolve,850));
    $('wheel').style.transform='rotate(0deg)';
-   s.balance+=prize;
-   s.spinHistory.unshift({date:new Date().toISOString(),prize});
-   s.spinHistory=s.spinHistory.slice(0,20);
-   save();spinning=false;paint();
-   $('wheel').textContent='+'+prize;
-   $('spinMsg').textContent='🎉 You won +'+prize+' TNV! Spin Energy used: 1.';
-   toast('🎉 Spin reward +'+prize+' TNV');
+   syncServerState(j);
+   const prize=Number(j.reward||0);
+   s.spinHistory.unshift({date:new Date().toISOString(),prize});s.spinHistory=s.spinHistory.slice(0,20);save();
+   $('wheel').textContent='+'+fmt(prize);
+   $('spinMsg').textContent='🎉 Server confirmed +'+fmt(prize)+' TNV. 1 Energy used.';
+   toast('🎉 Server confirmed +'+fmt(prize)+' TNV');
    setTimeout(()=>$('wheel').textContent='SPIN',1200);
- },900);
+ }catch(e){
+   $('wheel').style.transform='rotate(0deg)';$('spinMsg').textContent='Spin failed: '+e.message;toast('Spin not completed: '+e.message);
+ }finally{spinning=false;paint()}
 };
 
 document.querySelectorAll('.buyEnergy').forEach(btn=>btn.addEventListener('click',()=>{
- if(spinning)return;
- const cost=Number(btn.dataset.cost),energy=Number(btn.dataset.energy),name=btn.dataset.name;
- if(s.balance<cost){toast('Not enough TNV for '+name+' package.');return}
- if(!confirm('Buy '+energy+' Spin Energy for '+fmt(cost)+' TNV?'))return;
- s.balance-=cost;s.spinEnergy+=energy;save();paint();
- toast('⚡ '+name+' package added: +'+energy+' Spin Energy');
- $('spinMsg').textContent=name+' Energy package purchased locally. You now have '+fmt(s.spinEnergy)+' Spin Energy.';
+ toast('TNV Energy purchases are not enabled on the server yet. No balance or Energy was changed.');
+ $('spinMsg').textContent='This purchase option is disabled until a secure server-side TNV purchase route is implemented.';
 }));
 
-$('freeEnergyBtn').onclick=()=>{
- if(s.freeEnergyClaim===dayKey())return;
- s.spinEnergy+=25;s.freeEnergyClaim=dayKey();save();paint();renderExtras();
- toast('⚡ +25 Daily Free Energy added!');
+$('freeEnergyBtn').onclick=async()=>{
+ if(busy)return;busy=true;$('freeEnergyBtn').disabled=true;
+ try{
+   const j=await api('/api/energy/free',{});
+   await refreshServerState();s.freeEnergyClaim=dayKey();save();paint();renderExtras();
+   $('freeEnergyMsg').textContent='Server confirmed +'+Number(j.energyAdded||0)+' Spin Energy.';
+   toast('⚡ +'+Number(j.energyAdded||0)+' Energy confirmed by server!');
+ }catch(e){$('freeEnergyMsg').textContent='Energy not claimed: '+e.message;toast('Energy not claimed: '+e.message)}
+ finally{busy=false;paint();renderExtras()}
 };
 
 document.querySelectorAll('.tonBoost').forEach(btn=>btn.onclick=async()=>{
@@ -383,10 +392,11 @@ document.querySelectorAll('.tonBoost').forEach(btn=>btn.onclick=async()=>{
      wallet_address:currentWallet.account.address
    });
    if(!j?.ok)throw new Error(j?.error||'Boost payment verification failed');
-   if(j.verified===false)throw new Error('Payment submitted but not yet verified. Boost was not activated.');
-   s.activeBoost=mult;s.boostUntil=Date.now()+hours*3600000;
-   save();paint();renderExtras();
-   toast('🚀 Boost activated: '+mult+'×');
+   if(j.verified!==true){
+     $('boostStatus').textContent='Payment request submitted, but blockchain verification is not configured. Boost was not activated.';
+     toast('Payment pending verification. Boost not activated.');return;
+   }
+   await refreshServerState();toast('🚀 Server confirmed boost: '+mult+'×');
  }catch(e){
    console.error('TapNova TON Boost payment error:',e);
    toast('⚠️ '+(e.message||'TON payment failed'));
@@ -402,10 +412,13 @@ $('copyRef').onclick=()=>{
 
 $('shareRef').onclick=()=>{$('shareBtn').click()};
 
-$('airCheck').onclick=()=>{
- const ok=(s.activeDays||0)>=7&&(s.referrals||0)>=3&&(s.spins||0)>=50&&!!user()&&Date.now()>=0;
- $('airResult').textContent=ok?'🟢 Eligible for the current prototype criteria. Final allocation is subject to official rules.':'🔴 Not eligible yet. Complete the criteria shown above.';
- $('airResult').className=ok?'muted statusok':'muted';
+$('airCheck').onclick=async()=>{
+ $('airResult').textContent='Checking eligibility with TapNova server…';
+ try{
+   const j=await api('/api/eligibility',null,'GET');
+   $('airResult').textContent=j.eligible?'🟢 Server reports payment eligibility confirmed.':'🔴 Not eligible yet: '+(j.message||'Required payment is not verified.');
+   $('airResult').className=j.eligible?'muted statusok':'muted';
+ }catch(e){$('airResult').textContent='Eligibility check failed: '+e.message;$('airResult').className='muted'}
 };
 
 async function sendTonPayment(tonAmount,comment){
@@ -449,15 +462,13 @@ document.querySelectorAll('.tonEnergy').forEach(btn=>btn.onclick=async()=>{
    });
 
    if(!j?.ok)throw new Error(j?.error||'Payment verification failed');
-   if(j.verified===false){
-     $('payStatus').textContent='⏳ Payment submitted, but blockchain verification is still pending. No Energy was credited yet.';
-     toast('Payment sent; verification pending.');
-     return;
+   if(j.verified!==true){
+     $('payStatus').textContent='⏳ Payment request saved, but blockchain verification is not configured. No Energy was credited.';
+     toast('Payment pending verification. No Energy credited.');return;
    }
-
-   s.spinEnergy+=energy;save();paint();renderExtras();
-   $('payStatus').textContent='✅ Payment verified: +'+fmt(energy)+' Spin Energy added.';
-   toast('⚡ +'+fmt(energy)+' Energy added');
+   await refreshServerState();
+   $('payStatus').textContent='✅ Server confirmed payment and Energy credit.';
+   toast('⚡ Energy purchase confirmed by server');
  }catch(e){
    console.error('TapNova TON Energy payment error:',e);
    $('payStatus').textContent='⚠️ '+(e.message||'TON payment failed')+'. No Energy was credited.';
@@ -487,19 +498,9 @@ $('recheck').onclick=()=>auth();
 paint();renderExtras();
 
 if(document.readyState==='loading'){
- document.addEventListener('DOMContentLoaded',()=>{
-   initTonWallet();
-   auth();
- });
-}else{
- initTonWallet();
- auth();
-}
-
-setTimeout(()=>{
- auth();
- renderExtras();
-},1000);
+ document.addEventListener('DOMContentLoaded',()=>{initTonWallet();auth()});
+}else{initTonWallet();auth()}
+setTimeout(()=>{const w=tg();try{w?.ready();w?.expand()}catch(e){}auth();renderExtras()},700);
 
 })();
 </script>
