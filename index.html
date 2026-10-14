@@ -1,157 +1,245 @@
-<!doctype html>
+from pathlib import Path
+p=Path("/mnt/data/TapNova-Full-Moon-Rush-Game.html")
+html=r'''<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#101326">
+<meta name="theme-color" content="#090d1c">
 <title>TapNova — Moon Rush</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 <style>
-:root{--bg:#0b1022;--panel:#151d38;--panel2:#202b4d;--line:#344064;--txt:#f5f7ff;--muted:#a7b4d6;--lime:#d3ff52;--pink:#ff78c9;--blue:#75c8ff;--gold:#ffce6a;--purple:#a78bfa;--red:#ff718a}
-*{box-sizing:border-box}html{background:var(--bg)}body{margin:0 auto;max-width:560px;min-height:100vh;padding:14px 14px 100px;background:radial-gradient(ellipse at 50% -10%,#394a83 0,transparent 47%),var(--bg);color:var(--txt);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:12px 14px;font-weight:850;background:var(--lime);color:#11172b;width:100%;margin-top:8px}button.secondary{background:#202b4d;color:var(--txt);border:1px solid var(--line)}button.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}button:disabled{opacity:.45;cursor:not-allowed}button:active{transform:scale(.985)}
-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 15px}.brand{font-weight:1000;letter-spacing:.7px;font-size:22px}.brand span{color:var(--lime)}.status{border:1px solid var(--line);border-radius:30px;padding:7px 10px;font-size:10px;color:var(--muted);max-width:53%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.card{background:linear-gradient(145deg,#1b2546ee,#111a33f5);border:1px solid #344064b8;border-radius:22px;padding:15px;margin:12px 0;box-shadow:0 12px 28px #0002}.eyebrow{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted)}.big{font-size:34px;font-weight:1000;letter-spacing:-1px;margin:4px 0}.big small{font-size:12px;color:var(--lime);letter-spacing:0}.muted{font-size:12px;line-height:1.5;color:var(--muted)}.title{font-weight:950;font-size:16px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.row>button{width:auto;min-width:92px;margin:0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}.stat{background:#0c142b;border:1px solid #293657;border-radius:14px;padding:10px}.stat b{display:block;font-size:16px}.stat span{font-size:10px;color:var(--muted)}
-.hero{text-align:center;position:relative;overflow:hidden;padding:18px 14px}.moon{width:154px;height:154px;border-radius:50%;margin:16px auto 12px;display:grid;place-items:center;font-size:70px;position:relative;background:radial-gradient(circle at 33% 27%,#fff7c1 0,#ffe57c 15%,#dcae57 38%,#7863ad 66%,#25264c 72%);box-shadow:0 0 0 8px #d3ff5211,0 0 42px #8b78ff44,inset -18px -22px 32px #080e24;user-select:none;touch-action:manipulation;animation:float 3s ease-in-out infinite}.moon:before,.moon:after{content:"";position:absolute;border:1px solid #fff4;border-radius:50%;inset:-10px;transform:rotate(-28deg) scaleY(.28)}.moon:after{inset:-22px;transform:rotate(26deg) scaleY(.25);border-color:#d3ff5266}@keyframes float{50%{transform:translateY(-5px)}}.playbtn{font-size:16px;letter-spacing:.3px;padding:15px}.hint{margin-top:7px;font-size:11px;color:var(--muted)}
-.progress{height:7px;background:#080f23;border-radius:10px;overflow:hidden;margin-top:9px}.progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--lime));transition:width .3s}
-.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.quick button{padding:11px 5px;font-size:11px;background:#202b4d;color:var(--txt);border:1px solid var(--line)}
-.page{display:none}.page.active{display:block}.nav{position:fixed;z-index:20;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:4px;padding:8px 5px calc(8px + env(safe-area-inset-bottom));background:#0a1024ed;backdrop-filter:blur(18px);border-top:1px solid var(--line);overflow-x:auto}.nav button{min-width:64px;max-width:100px;margin:0;padding:10px 4px;background:transparent;color:var(--muted);font-size:10px;border:1px solid transparent;white-space:nowrap}.nav button.active{background:#d3ff5216;color:var(--lime);border-color:#d3ff5230}
-.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:8px}.pill{border-radius:20px;padding:5px 8px;background:#d3ff5215;color:var(--lime);font-size:10px;font-weight:850}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.tile{background:#0d152c;border:1px solid var(--line);border-radius:16px;padding:12px}.tile .emoji{font-size:24px}.tile b{display:block;margin:5px 0}.tile small{color:var(--muted);font-size:11px}.tile .price{color:var(--gold);font-size:12px;font-weight:850}
-.wheel{width:178px;height:178px;border-radius:50%;margin:16px auto;border:8px solid #f3e9a6;background:conic-gradient(var(--pink) 0 45deg,var(--blue) 45deg 90deg,var(--lime) 90deg 135deg,var(--gold) 135deg 180deg,var(--purple) 180deg 225deg,#ff9b76 225deg 270deg,#74e1b8 270deg 315deg,#8e9dff 315deg);box-shadow:0 0 0 6px #fff1,0 0 35px #b6a0ff33;display:grid;place-items:center;transition:transform 1.2s cubic-bezier(.12,.75,.12,1)}.wheel span{display:grid;place-items:center;width:67px;height:67px;border-radius:50%;background:#11172d;border:4px solid #f3e9a6;font-size:26px}
-.listitem{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #293657}.listitem:last-child{border-bottom:0}.listitem .iconbox{width:42px;height:42px;border-radius:13px;background:#d3ff5215;display:grid;place-items:center;font-size:22px}.listitem .info{flex:1;min-width:0}.listitem .info b{display:block;font-size:13px}.listitem .info small{font-size:10px;color:var(--muted)}.listitem button{width:auto;min-width:82px;margin:0;padding:9px;font-size:11px}
-.toast{position:fixed;z-index:40;bottom:88px;left:16px;right:16px;max-width:520px;margin:auto;padding:12px 14px;border-radius:14px;background:#f5f7ff;color:#11172b;font-size:12px;font-weight:850;text-align:center;box-shadow:0 8px 30px #0007;display:none}.notice{background:#392d20;border:1px solid #715b31;color:#ffe2a0;border-radius:13px;padding:11px;font-size:11px;line-height:1.5;margin-top:10px;overflow-wrap:anywhere}.good{color:var(--lime)}.danger{color:var(--red)}.refurl{background:#0a1228;border:1px solid var(--line);border-radius:12px;padding:11px;font-size:11px;word-break:break-all;margin-top:9px}
-#ton-connect{margin-top:10px}.walletstatus{font-size:11px;color:var(--muted);margin-top:8px;overflow-wrap:anywhere}
-@media(max-width:370px){.big{font-size:29px}.moon{width:135px;height:135px;font-size:60px}.grid2{grid-template-columns:1fr}.nav button{min-width:58px;font-size:9px}}
+:root{--bg:#090d1c;--panel:#121a30;--panel2:#182342;--line:#2a385e;--txt:#f4f7ff;--muted:#9eadd0;--cyan:#62eaff;--violet:#a18aff;--green:#78f0b5;--gold:#ffd47d;--red:#ff8eaa}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:radial-gradient(ellipse at 50% -10%,#27315b 0,transparent 48%),var(--bg);color:var(--txt);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;padding-bottom:88px}button,input{font:inherit}button{cursor:pointer;border:0}button:disabled{opacity:.4;cursor:not-allowed}.app{max-width:560px;margin:auto;padding:14px 14px 28px}.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.brand{font-size:22px;font-weight:950;letter-spacing:.08em}.brand span{color:var(--cyan)}.tiny-pill{font-size:11px;color:var(--green);border:1px solid #285c53;border-radius:30px;padding:5px 8px}.userline{color:var(--muted);font-size:12px;margin-top:2px}.balance-card{padding:18px;border:1px solid #3d4c7a;border-radius:23px;background:linear-gradient(135deg,#202b52dd,#13182ddd);box-shadow:0 12px 35px #0005;position:relative;overflow:hidden}.balance-card:after{content:"";position:absolute;width:160px;height:160px;border-radius:50%;background:#65dfff12;right:-55px;top:-60px;filter:blur(2px)}.label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}.balance{font-size:35px;font-weight:900;letter-spacing:-.04em;margin:2px 0}.balance small{font-size:13px;color:var(--cyan);letter-spacing:0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.stat{background:#0a1023a8;border:1px solid #2b385a;border-radius:13px;padding:10px}.stat b{display:block;font-size:15px}.stat span{font-size:11px;color:var(--muted)}.panel{display:none}.panel.active{display:block}.section-title{display:flex;justify-content:space-between;align-items:center;margin:18px 2px 10px}.section-title h2{font-size:17px;margin:0}.muted{color:var(--muted)}.card{border:1px solid var(--line);background:linear-gradient(145deg,#151e37,#10172a);border-radius:18px;padding:15px;margin:10px 0}.hero-game{text-align:center;position:relative;overflow:hidden;padding:20px 14px 16px}.orb-wrap{width:230px;height:230px;margin:12px auto 14px;display:grid;place-items:center;position:relative;touch-action:manipulation}.orbit{position:absolute;inset:9px;border:1px solid #6378c877;border-radius:50%;animation:spin 18s linear infinite}.orbit:before,.orbit:after{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 18px var(--cyan);top:17px;left:29px}.orbit:after{top:auto;left:auto;right:21px;bottom:27px;background:var(--violet);box-shadow:0 0 18px var(--violet)}.orb{width:166px;height:166px;border-radius:50%;background:radial-gradient(circle at 34% 27%,#ffffff 0,#a5faff 4%,#50cfff 13%,#6267ef 38%,#38245e 68%,#15152d 77%);box-shadow:0 0 24px #5be7ff88,0 0 65px #7869ff66,inset -16px -20px 35px #090c25;display:grid;place-items:center;font-size:48px;user-select:none;transition:transform .09s;position:relative}.orb:before{content:"";position:absolute;inset:-9px;border-radius:50%;border:2px solid #83efff88;box-shadow:0 0 20px #68dcff44}.orb:active,.orb.pop{transform:scale(.94)}@keyframes spin{to{transform:rotate(360deg)}}.tap-hint{font-weight:800;color:var(--cyan);font-size:13px}.energy-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin:15px 0 7px}.bar{height:9px;background:#090e20;border-radius:9px;overflow:hidden;border:1px solid #293556}.bar>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:9px;transition:width .2s}.btn{border-radius:13px;padding:12px 14px;font-weight:800;background:#263353;color:white;border:1px solid #3a4b76}.btn.primary{background:linear-gradient(100deg,var(--cyan),#9e91ff);color:#101326;border:0}.btn.green{background:linear-gradient(100deg,#6ef0b0,#b2ffd2);color:#09251c}.btn.gold{background:linear-gradient(100deg,#ffd47d,#ffad8b);color:#2b1b08}.btn.full{width:100%}.btnrow{display:flex;gap:8px}.btnrow>*{flex:1}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{border:1px solid var(--line);background:#121a30;border-radius:16px;padding:13px}.item .emoji{font-size:25px}.item h3{font-size:14px;margin:6px 0 3px}.item p{font-size:12px;color:var(--muted);margin:0 0 10px}.item .btn{width:100%;padding:10px 7px;font-size:13px}.rowitem{display:flex;align-items:center;gap:11px}.rowitem .content{flex:1;min-width:0}.rowitem h3{margin:0 0 3px;font-size:14px}.rowitem p{margin:0;color:var(--muted);font-size:12px}.rowitem .btn{padding:9px 12px;font-size:12px}.badge{font-size:11px;color:var(--gold);background:#3c301d;border-radius:20px;padding:4px 7px;white-space:nowrap}.nav{position:fixed;bottom:0;left:0;right:0;z-index:10;background:#0a1024f2;backdrop-filter:blur(16px);border-top:1px solid #263252;padding:8px max(8px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,1fr);max-width:560px;margin:auto}.nav button{background:transparent;color:#8190b5;font-size:10px;padding:5px 1px;border-radius:10px}.nav button .ico{display:block;font-size:20px;margin-bottom:2px}.nav button.active{color:var(--cyan);background:#1a2545}.notice{font-size:12px;color:var(--gold);background:#33291b55;border:1px solid #59462b;border-radius:12px;padding:10px}.input{width:100%;background:#090f21;border:1px solid #35466e;border-radius:12px;color:white;padding:12px;margin:5px 0 12px}.list{padding-left:18px;color:var(--muted);font-size:13px}.toast{position:fixed;z-index:20;left:50%;bottom:100px;transform:translateX(-50%);background:#202c4d;border:1px solid #4c6090;color:white;border-radius:14px;padding:11px 15px;max-width:90%;box-shadow:0 10px 30px #0008;display:none}.toast.show{display:block}.refbox{overflow-wrap:anywhere;background:#0b1123;padding:10px;border-radius:10px;font-size:12px;color:var(--cyan);margin:10px 0}.rank{font-weight:900;color:var(--gold);width:28px}.progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:10px 0 6px}.small{font-size:11px;color:var(--muted)}code{overflow-wrap:anywhere}
 </style>
 </head>
 <body>
-<header><div class="brand">🚀 TAP<span>NOVA</span></div><div id="app-status" class="status">Starting Moon Rush…</div></header>
+<div class="app">
+  <header class="top">
+    <div><div class="brand">🚀 TAP<span>NOVA</span></div><div class="userline" id="user-line">Moon Rush • Guest mode</div></div>
+    <span class="tiny-pill" id="mode-pill">DEMO MODE</span>
+  </header>
 
-<section class="page active" id="page-home">
- <div class="card">
-  <div class="eyebrow">Your space wallet</div><div class="big"><span id="balance">1,250</span> <small>TNV</small></div>
-  <div class="stats"><div class="stat"><b id="level">1</b><span>MOON LEVEL</span></div><div class="stat"><b id="energy">10/10</b><span>SPIN ENERGY</span></div><div class="stat"><b id="streak">1 day</b><span>STREAK</span></div></div>
-  <div class="progress"><div id="levelbar" style="width:18%"></div></div>
-  <div class="muted" style="margin-top:7px" id="next-level">750 TNV to your next Moon</div>
- </div>
- <div class="card hero">
-  <div class="eyebrow">Daily moon rush</div><div class="title" style="font-size:21px;margin-top:5px">Spin. Win. Level up.</div>
-  <div class="moon" id="moon">🌕</div>
-  <div class="muted">Use Energy to spin for TNV, bonus Energy and Moon XP.</div>
-  <button class="playbtn" onclick="spin()">🎰 SPIN THE MOON</button>
-  <div class="hint" id="spin-hint">One spin costs 1 Energy · Rewards are demo-only until Worker is connected</div>
- </div>
- <div class="quick"><button onclick="claimDaily()">🎁 Daily Drop</button><button onclick="showPage('shop')">⚡ Get Energy</button><button onclick="showPage('friends')">👥 Invite Friends</button></div>
- <div class="card"><div class="sectionhead"><div class="title">Today's missions</div><span class="pill" id="mission-count">0/3</span></div><div id="home-missions"></div><button class="secondary" onclick="showPage('missions')">View all missions</button></div>
- <div class="card"><div class="sectionhead"><div class="title">🚀 Next Moon</div><span class="pill">Progress</span></div><div class="muted">Every level unlocks new milestones and bigger in-game goals.</div><div class="progress"><div id="moon-progress" style="width:25%"></div></div><div class="row" style="margin-top:9px"><span class="muted" id="xp-label">250 / 1,000 XP</span><span class="muted" id="moon-name">Moon 1</span></div></div>
-</section>
+  <section class="balance-card">
+    <div class="label">Your TNV balance</div>
+    <div class="balance"><span id="balance">1,000</span> <small>TNV</small></div>
+    <div class="stats">
+      <div class="stat"><b id="energy-top">10 / 10</b><span>Spin Energy</span></div>
+      <div class="stat"><b id="spin-count">0</b><span>Total Spins</span></div>
+      <div class="stat"><b id="streak">1 day</b><span>Daily Streak</span></div>
+    </div>
+  </section>
 
-<section class="page" id="page-spin">
- <div class="card hero"><div class="eyebrow">Fortune station</div><div class="title" style="font-size:22px;margin-top:5px">Wheel of Wonders</div><div class="wheel" id="wheel"><span>🚀</span></div><div class="muted">Spin for coins, XP, energy or a surprise boost.</div><div class="stats"><div class="stat"><b id="spin-total">0</b><span>TOTAL SPINS</span></div><div class="stat"><b id="best-win">0</b><span>BEST WIN</span></div><div class="stat"><b id="spin-energy">10</b><span>ENERGY</span></div></div><button class="playbtn" onclick="spin()">🎰 SPIN NOW · 1 ENERGY</button><div class="hint">Demo rewards are not tokens or guaranteed airdrop allocations.</div></div>
- <div class="card"><div class="title">How to keep progressing</div><div class="listitem"><div class="iconbox">⚡</div><div class="info"><b>Refill your energy</b><small>Claim daily free energy or view energy packs.</small></div><button onclick="showPage('shop')">Shop</button></div><div class="listitem"><div class="iconbox">🎯</div><div class="info"><b>Complete missions</b><small>Build your daily streak and earn demo XP.</small></div><button onclick="showPage('missions')">Missions</button></div></div>
-</section>
+  <section id="home" class="panel active">
+    <div class="section-title"><h2>🌌 Moon Rush Arena</h2><span class="badge">Season 01</span></div>
+    <div class="card hero-game">
+      <div class="muted" style="font-size:12px">Tap the Moon Core to collect TNV</div>
+      <div class="orb-wrap" id="orb-wrap"><div class="orbit"></div><button class="orb" id="tap-orb" aria-label="Tap Moon Core">☄️</button></div>
+      <div class="tap-hint">TAP TO CHARGE THE CORE</div>
+      <div class="energy-row"><span>⚡ Spin Energy</span><b id="energy-text">10 / 10</b></div>
+      <div class="bar"><i id="energy-bar"></i></div>
+      <div class="btnrow" style="margin-top:13px"><button class="btn primary" id="spin-btn">🎰 Spin · 1 Energy</button><button class="btn" id="free-energy-btn">⚡ Free Energy</button></div>
+      <div class="small" style="margin-top:10px">Tapping earns demo TNV. Spin uses one Energy.</div>
+    </div>
+    <div class="section-title"><h2>🎯 Quick missions</h2><button class="btn" data-go="missions">View all</button></div>
+    <div id="quick-missions"></div>
+    <div class="section-title"><h2>✨ Upgrade your run</h2><button class="btn" data-go="shop">Energy shop</button></div>
+    <div class="grid2">
+      <div class="item"><div class="emoji">⚡</div><h3>Energy Capacity</h3><p>Increase your maximum spin energy.</p><button class="btn" id="upgrade-home">Upgrade · 750 TNV</button></div>
+      <div class="item"><div class="emoji">🌠</div><h3>Daily Free Energy</h3><p>Claim once per UTC day.</p><button class="btn" id="free-home">Claim energy</button></div>
+    </div>
+  </section>
 
-<section class="page" id="page-shop">
- <div class="card"><div class="eyebrow">Power station</div><div class="title" style="font-size:22px;margin-top:5px">Energy & Boost Shop</div><div class="muted">Energy packs and boosts will be verified by the Worker before production rewards are granted.</div><div class="stats"><div class="stat"><b id="shop-energy">10</b><span>CURRENT ENERGY</span></div><div class="stat"><b id="shop-max">10</b><span>ENERGY CAP</span></div><div class="stat"><b>Daily</b><span>FREE REFILL</span></div></div><button onclick="claimFreeEnergy()">⚡ Claim daily free energy</button></div>
- <div class="card"><div class="title">⚡ Energy packs</div><div class="muted">TON prices below are proposed package settings, not live checkout offers until payment verification is configured.</div><div class="grid2" id="energy-packs"></div></div>
- <div class="card"><div class="title">✨ Permanent upgrades</div><div class="muted">Demo upgrade prices use TNV game balance. The Worker must validate every purchase in production.</div><div class="grid2" id="upgrades"></div></div>
- <div class="card"><div class="title">🚀 Boosts</div><div class="grid2" id="boosts"></div></div>
-</section>
+  <section id="shop" class="panel">
+    <div class="section-title"><h2>⚡ Energy Boost Shop</h2><span class="badge">TON packages</span></div>
+    <div class="notice">Payment is in test mode until a matching Cloudflare Worker verifies confirmed TON transactions. Never trust a wallet popup alone as payment proof.</div>
+    <div class="section-title"><h2>Buy energy with TON</h2></div>
+    <div class="grid2" id="ton-packages"></div>
+    <div class="section-title"><h2>Permanent upgrades</h2></div>
+    <div class="grid2">
+      <div class="item"><div class="emoji">🔋</div><h3>Capacity +5</h3><p>Increase max energy by 5.</p><b>750 TNV</b><button class="btn" style="margin-top:10px" id="upgrade-cap">Upgrade</button></div>
+      <div class="item"><div class="emoji">🚀</div><h3>Spin Multiplier</h3><p>Improve future demo spin rewards.</p><b>1,500 TNV</b><button class="btn" style="margin-top:10px" id="upgrade-mult">Upgrade</button></div>
+    </div>
+    <div class="section-title"><h2>TON Wallet</h2></div>
+    <div class="card"><div id="ton-connect-root"></div><div id="wallet-status" class="muted" style="margin-top:10px">Wallet not connected.</div><div class="small" style="margin-top:8px">Wallet connection does not mean a payment was made.</div></div>
+    <div class="card"><h3 style="margin-top:0">Payment status</h3><div id="payment-status" class="muted">No payment request sent.</div></div>
+  </section>
 
-<section class="page" id="page-missions">
- <div class="card"><div class="eyebrow">Daily objectives</div><div class="title" style="font-size:22px;margin-top:5px">Missions & Streaks</div><div class="muted">Small goals make each session feel rewarding. Daily claims reset by server date in production.</div><div class="stats"><div class="stat"><b id="missions-done">0/3</b><span>MISSIONS</span></div><div class="stat"><b id="mission-reward">0</b><span>TNV EARNED</span></div><div class="stat"><b id="mission-streak">1</b><span>DAY STREAK</span></div></div></div>
- <div class="card"><div id="missions-list"></div></div>
- <div class="card"><div class="title">🎁 Daily Supply Drop</div><div class="muted">Claim once per day. In this prototype it is a local demo claim; it will be server-validated in the Worker version.</div><button onclick="claimDaily()" id="daily-button">Claim +500 TNV</button><div class="hint" id="daily-status">Available in demo</div></div>
-</section>
+  <section id="missions" class="panel">
+    <div class="section-title"><h2>🎯 Missions & Rewards</h2><span class="badge">Daily</span></div>
+    <div class="card"><div class="rowitem"><div style="font-size:28px">🎁</div><div class="content"><h3>Daily login reward</h3><p>Claim your daily TNV reward.</p><div class="small" id="daily-state">Available today</div></div><button class="btn green" id="daily-claim">Claim +500</button></div></div>
+    <div id="mission-list"></div>
+    <div class="card"><h3>🔥 Daily streak</h3><p class="muted">Return each UTC day to maintain your streak. This prototype saves progress in this browser only.</p><div class="progress-label"><span>Current streak</span><b id="streak-detail">1 day</b></div><div class="bar"><i id="streak-bar" style="width:20%"></i></div></div>
+  </section>
 
-<section class="page" id="page-friends">
- <div class="card"><div class="eyebrow">Grow the Nova crew</div><div class="title" style="font-size:22px;margin-top:5px">Friends & Referrals</div><div class="muted">Invite friends to join the game. Referral counts and rewards must be confirmed by the Worker using Telegram's verified user ID.</div><div class="stats"><div class="stat"><b id="ref-count">0</b><span>FRIENDS JOINED</span></div><div class="stat"><b id="ref-reward">0</b><span>DEMO BONUS</span></div><div class="stat"><b>+250</b><span>PER VERIFIED FRIEND*</span></div></div><div class="refurl" id="ref-link">Open the game inside Telegram to create your personal referral link.</div><button onclick="copyReferral()">📋 Copy invite link</button><button class="secondary" onclick="shareReferral()">↗ Share with friends</button><div class="hint">*Proposed in-game demo value; production reward rules are set on the server.</div></div>
- <div class="card"><div class="title">🏆 Crew challenge</div><div class="muted">Play regularly and invite real friends to build your crew. No fabricated leaderboard ranks are shown in this prototype.</div><div class="listitem"><div class="iconbox">👥</div><div class="info"><b>Invite 3 friends</b><small>Starter crew milestone</small></div><span class="pill" id="crew-progress">0/3</span></div><div class="progress"><div id="crew-bar" style="width:0%"></div></div></div>
-</section>
+  <section id="friends" class="panel">
+    <div class="section-title"><h2>🧑‍🚀 Friends & Referrals</h2><span class="badge">Invite crew</span></div>
+    <div class="card"><div class="stats" style="margin-top:0"><div class="stat"><b id="ref-count">0</b><span>Invited friends*</span></div><div class="stat"><b id="ref-reward">0</b><span>Referral TNV*</span></div><div class="stat"><b>+250</b><span>Per valid invite</span></div></div><p class="small" style="margin-top:12px">*Demo counters are local only. Real referral counts must be validated and saved by the Worker.</p><div class="section-title"><h2>Your invite link</h2></div><div class="refbox" id="ref-link">Open inside Telegram to create your invite link.</div><div class="btnrow"><button class="btn primary" id="copy-ref">Copy link</button><button class="btn" id="share-ref">Share invite</button></div></div>
+    <div class="card"><h3>How referrals work</h3><ol class="list"><li>Share your personal invite link.</li><li>Your friend opens TapNova inside Telegram.</li><li>Server validates the new account and inviter.</li><li>Rewards are added only after server validation.</li></ol></div>
+    <div class="section-title"><h2>🏆 Crew leaderboard</h2></div><div id="leaderboard"></div>
+  </section>
 
-<section class="page" id="page-airdrop">
- <div class="card"><div class="eyebrow">TNV community campaign</div><div class="title" style="font-size:22px;margin-top:5px">Airdrop Hub</div><div class="muted">This page tracks game milestones only. Eligibility and any future distribution must be explicitly defined and verified server-side; game points do not guarantee token value or an airdrop.</div><div class="stats"><div class="stat"><b id="air-balance">1,250</b><span>GAME BALANCE</span></div><div class="stat"><b id="air-spins">0</b><span>SPINS</span></div><div class="stat"><b id="air-friends">0</b><span>FRIENDS</span></div></div><div id="eligibility-state" class="notice">Prototype mode: eligibility has not been verified by the server.</div></div>
- <div class="card"><div class="title">Eligibility checklist</div><div class="listitem"><div class="iconbox">📱</div><div class="info"><b>Telegram account verified</b><small>Must be authenticated by Telegram initData on Worker.</small></div><span class="pill" id="check-telegram">Pending</span></div><div class="listitem"><div class="iconbox">🎮</div><div class="info"><b>Play activity</b><small>Spin and mission activity stored server-side.</small></div><span class="pill" id="check-play">Pending</span></div><div class="listitem"><div class="iconbox">👥</div><div class="info"><b>Referral milestone</b><small>Only verified referrals count.</small></div><span class="pill" id="check-ref">Pending</span></div><div class="listitem"><div class="iconbox">👛</div><div class="info"><b>TON wallet / payment</b><small>Payment status only changes after chain verification.</small></div><span class="pill" id="check-pay">Not verified</span></div></div>
-</section>
+  <section id="airdrop" class="panel">
+    <div class="section-title"><h2>🪂 TNV Airdrop</h2><span class="badge">Eligibility</span></div>
+    <div class="card"><div style="font-size:36px">🌙</div><h2 style="margin-top:5px">Your journey matters</h2><p class="muted">This screen tracks prototype activity. It does not represent a real token allocation or guarantee an airdrop.</p><div class="progress-label"><span>Activity score</span><b id="activity-score">0 / 100</b></div><div class="bar"><i id="activity-bar" style="width:0%"></i></div><div class="section-title"><h2>Eligibility checklist</h2></div><div id="eligibility-list"></div><div class="notice" style="margin-top:12px">Airdrop eligibility and allocations must be determined by the project’s published rules and trusted server records. No token claim is enabled in this prototype.</div></div>
+    <div class="section-title"><h2>Activity record</h2></div><div id="activity-record"></div>
+  </section>
 
-<section class="page" id="page-wallet">
- <div class="card"><div class="eyebrow">Wallet station</div><div class="title" style="font-size:22px;margin-top:5px">TON Wallet</div><div class="muted">Connect a wallet to prepare TON Connect purchases. Connecting a wallet alone does not prove that a payment was made.</div><div id="ton-connect"></div><div id="wallet-status" class="walletstatus">TON Connect loads in supported browsers.</div><div id="wallet-address" class="walletstatus"></div></div>
- <div class="card"><div class="title">Payment safety</div><div class="notice">Prototype only: this HTML does not confirm TON blockchain payments. The production Worker must validate the transaction against the expected recipient, amount, network, memo/order and unique transaction before crediting purchases.</div><button class="secondary" onclick="showPage('shop')">View energy packages</button></div>
-</section>
-
+  <section id="profile" class="panel">
+    <div class="section-title"><h2>👤 Player profile</h2></div>
+    <div class="card"><div class="rowitem"><div style="font-size:40px">🧑‍🚀</div><div class="content"><h3 id="profile-name">Moon Explorer</h3><p id="profile-id">Telegram user not detected</p></div><span class="badge">Rookie</span></div><div class="stats"><div class="stat"><b id="profile-spins">0</b><span>Spins</span></div><div class="stat"><b id="profile-taps">0</b><span>Taps</span></div><div class="stat"><b id="profile-missions">0</b><span>Missions</span></div></div></div>
+    <div class="card"><h3>System status</h3><div class="rowitem"><div class="content"><h3>Telegram Mini App</h3><p id="telegram-state">Browser / demo mode</p></div><span class="badge" id="telegram-badge">DEMO</span></div><div class="rowitem" style="margin-top:12px"><div class="content"><h3>Cloudflare Worker</h3><p id="worker-state">Not configured</p></div><span class="badge">API</span></div><div class="rowitem" style="margin-top:12px"><div class="content"><h3>TON payment verification</h3><p>Not connected in this standalone prototype</p></div><span class="badge">PENDING</span></div></div>
+    <div class="card"><h3>Reset local demo</h3><p class="muted">Deletes progress saved in this browser only. This does not affect any server database.</p><button class="btn" id="reset-demo">Reset demo progress</button></div>
+  </section>
+</div>
 <nav class="nav">
- <button class="active" data-page="home" onclick="showPage('home')">🌕 Home</button>
- <button data-page="spin" onclick="showPage('spin')">🎰 Spin</button>
- <button data-page="shop" onclick="showPage('shop')">⚡ Shop</button>
- <button data-page="missions" onclick="showPage('missions')">🎯 Missions</button>
- <button data-page="friends" onclick="showPage('friends')">👥 Friends</button>
- <button data-page="airdrop" onclick="showPage('airdrop')">🪂 Airdrop</button>
+  <button class="active" data-go="home"><span class="ico">🌌</span>Play</button>
+  <button data-go="shop"><span class="ico">⚡</span>Boost</button>
+  <button data-go="missions"><span class="ico">🎯</span>Missions</button>
+  <button data-go="friends"><span class="ico">🧑‍🚀</span>Friends</button>
+  <button data-go="airdrop"><span class="ico">🪂</span>Airdrop</button>
 </nav>
-<div class="toast" id="toast"></div>
+<div id="toast" class="toast"></div>
 <script>
-/*
- TAPNOVA MOON RUSH — FRONTEND PROTOTYPE
- This file is a playable UI prototype only. It does not connect to a production Worker yet.
- Demo balance is stored locally and is NOT a real token balance.
- Before launch, replace DemoStore with authenticated Worker API calls and server-authoritative responses.
- Never credit TON purchases from client-side callbacks or unverified wallet submissions.
-*/
-const CONFIG={
- botUsername:"TapNovaEarnBot",
- apiBase:"https://YOUR-WORKER.workers.dev",
- tonManifestUrl:"https://tapnova2026.github.io/tapnova2026/tonconnect-manifest.json",
- treasuryAddress:"REPLACE_WITH_TAPNOVA_TREASURY_ADDRESS",
- energyPacks:[
-  {id:"spark",name:"Spark Pack",energy:20,ton:"0.05",tag:"STARTER",icon:"⚡"},
-  {id:"comet",name:"Comet Pack",energy:100,ton:"0.20",tag:"POPULAR",icon:"☄️"},
-  {id:"nova",name:"Nova Pack",energy:300,ton:"0.50",tag:"VALUE",icon:"🌟"},
-  {id:"galaxy",name:"Galaxy Pack",energy:800,ton:"1.00",tag:"MEGA",icon:"🌌"}
- ],
- upgrades:[
-  {id:"luck",name:"Lucky Core",desc:"+1% demo luck level",cost:1500,icon:"🍀"},
-  {id:"capacity",name:"Energy Tank",desc:"+5 max Energy",cost:2000,icon:"🔋"}
- ],
- boosts:[
-  {id:"double",name:"Double XP",desc:"2× XP · 30 minutes",cost:1000,icon:"✨"},
-  {id:"turbo",name:"Turbo Spin",desc:"Faster spin animation",cost:750,icon:"🚀"}
- ]
-};
-const $=id=>document.getElementById(id);
-const defaults={balance:1250,energy:10,maxEnergy:10,level:1,xp:250,streak:1,spins:0,bestWin:0,missions:{spin:false,daily:false,invite:false},dailyClaimed:"",freeEnergyClaimed:"",refCount:0,refReward:0,upgrades:[],boosts:[],wallet:""};
-let state={...defaults};
-function loadDemo(){try{const x=JSON.parse(localStorage.getItem("tapnova_moonrush_demo")||"null");if(x)state={...defaults,...x,missions:{...defaults.missions,...(x.missions||{})}}}catch(e){}}
-function saveDemo(){try{localStorage.setItem("tapnova_moonrush_demo",JSON.stringify(state))}catch(e){}}
-function toast(s){const el=$("toast");el.textContent=s;el.style.display="block";clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>el.style.display="none",2600)}
-function addXp(n){state.xp+=n;while(state.xp>=1000){state.xp-=1000;state.level++;state.balance+=250;toast("🌕 Moon level up! +250 demo TNV")} }
-function showPage(p){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+p));document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x.dataset.page===p));if(p==="wallet")initWallet();render()}
-function render(){
- $("balance").textContent=state.balance.toLocaleString();$("energy").textContent=state.energy+"/"+state.maxEnergy;$("level").textContent=state.level;$("streak").textContent=state.streak+" day"+(state.streak===1?"":"s");
- $("levelbar").style.width=Math.min(100,state.xp/10)+"%";$("next-level").textContent=(1000-state.xp)+" XP to your next Moon";$("xp-label").textContent=state.xp+" / 1,000 XP";$("moon-name").textContent="Moon "+state.level;$("moon-progress").style.width=(state.xp/10)+"%";
- $("spin-total").textContent=state.spins;$("best-win").textContent=state.bestWin.toLocaleString();$("spin-energy").textContent=state.energy;$("shop-energy").textContent=state.energy;$("shop-max").textContent=state.maxEnergy;
- $("missions-done").textContent=Object.values(state.missions).filter(Boolean).length+"/3";$("mission-count").textContent=Object.values(state.missions).filter(Boolean).length+"/3";$("mission-streak").textContent=state.streak;$("mission-reward").textContent=(Object.values(state.missions).filter(Boolean).length*100).toLocaleString();
- $("ref-count").textContent=state.refCount;$("ref-reward").textContent=state.refReward;$("crew-progress").textContent=Math.min(3,state.refCount)+"/3";$("crew-bar").style.width=Math.min(100,state.refCount/3*100)+"%";
- $("air-balance").textContent=state.balance.toLocaleString();$("air-spins").textContent=state.spins;$("air-friends").textContent=state.refCount;
- $("daily-button").disabled=state.dailyClaimed===new Date().toISOString().slice(0,10);$("daily-status").textContent=$("daily-button").disabled?"Already claimed in this browser today":"Available in demo";$("daily-button").textContent=$("daily-button").disabled?"Claimed today":"Claim +500 TNV";
- const tg=window.Telegram?.WebApp;const user=tg?.initDataUnsafe?.user;const base=user?`https://t.me/${CONFIG.botUsername}?startapp=ref_${user.id}`:"";$("ref-link").textContent=base||"Open this Mini App through Telegram to create a referral link.";
- $("home-missions").innerHTML=missionRows(true);$("missions-list").innerHTML=missionRows(false);renderPacks();renderUpgrades();renderBoosts();saveDemo();
+(() => {
+'use strict';
+// Prototype frontend only. Replace demoStore operations with authenticated Worker API before launch.
+const WORKER_API = 'https://YOUR-WORKER.workers.dev';
+const TON_MANIFEST_URL = 'https://tapnova2026.github.io/tapnova2026/tonconnect-manifest.json';
+const TON_RECEIVER_ADDRESS = ''; // Set the verified project receiving address before enabling payments.
+const $ = id => document.getElementById(id);
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { try { tg.ready(); tg.expand(); } catch (_) {} }
+const telegramUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+const todayUTC = () => new Date().toISOString().slice(0,10);
+const defaults = () => ({balance:1000,energy:10,maxEnergy:10,spins:0,taps:0,streak:1,lastDaily:'',lastFreeEnergy:'',lastSeen:todayUTC(),missions:{spin:false,tap:false,invite:false,upgrade:false},refCount:0,refReward:0,multiplier:1,activityDays:1,history:[],claimedMissions:[],walletAddress:'',});
+let state;
+try { state = Object.assign(defaults(), JSON.parse(localStorage.getItem('tapnova_moon_rush_v1') || 'null') || {}); } catch(e) { state=defaults(); }
+let tonUI = null;
+const toast = msg => { const el=$('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toast.timer); toast.timer=setTimeout(()=>el.classList.remove('show'),2600); };
+const save = () => { try { localStorage.setItem('tapnova_moon_rush_v1', JSON.stringify(state)); } catch(e){} render(); };
+const fmt = n => Math.floor(Number(n)||0).toLocaleString('en-US');
+const record = (title, detail) => { state.history.unshift({date:new Date().toISOString(),title,detail}); state.history=state.history.slice(0,12); };
+const go = page => { document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===page)); document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.go===page)); window.scrollTo({top:0,behavior:'smooth'}); if(page==='shop') initTon(); };
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+function tap(){
+  const gain = state.multiplier;
+  state.balance += gain; state.taps++; state.missions.tap = true;
+  $('tap-orb').classList.add('pop'); setTimeout(()=>$('tap-orb').classList.remove('pop'),100);
+  if(state.taps % 10 === 0) record('Moon Core charged','+'+gain*10+' TNV from 10 taps');
+  save();
 }
-function missionRows(compact){const rows=[["spin","🎰","Complete 1 spin","Play a round and keep your streak moving.",100],["daily","🎁","Claim daily supply drop","Come back each day for a new reward.",100],["invite","👥","Invite a friend","Build your crew with a real Telegram invite.",100]];return rows.map(([id,ic,title,desc,reward])=>`<div class="listitem"><div class="iconbox">${ic}</div><div class="info"><b>${title}</b><small>${desc}</small></div><span class="pill">${state.missions[id]?"Done":"+"+reward+" XP"}</span></div>`).join("")}
-function renderPacks(){$("energy-packs").innerHTML=CONFIG.energyPacks.map(p=>`<div class="tile"><div class="emoji">${p.icon}</div><b>${p.name}</b><div class="price">+${p.energy} Energy</div><small>${p.tag}</small><div class="price" style="margin-top:8px">${p.ton} TON</div><button class="secondary" onclick="buyPack('${p.id}')">Select pack</button></div>`).join("")}
-function renderUpgrades(){$("upgrades").innerHTML=CONFIG.upgrades.map(p=>{const owned=state.upgrades.includes(p.id);return `<div class="tile"><div class="emoji">${p.icon}</div><b>${p.name}</b><small>${p.desc}</small><div class="price" style="margin-top:8px">${p.cost.toLocaleString()} TNV</div><button ${owned?"disabled":""} onclick="buyUpgrade('${p.id}')">${owned?"Owned":"Upgrade"}</button></div>`}).join("")}
-function renderBoosts(){$("boosts").innerHTML=CONFIG.boosts.map(p=>`<div class="tile"><div class="emoji">${p.icon}</div><b>${p.name}</b><small>${p.desc}</small><div class="price" style="margin-top:8px">${p.cost.toLocaleString()} TNV</div><button class="secondary" onclick="buyBoost('${p.id}')">Activate</button></div>`).join("")}
-function spin(){if(state.energy<1){toast("⚡ Energy is empty — claim free energy or visit the shop.");showPage("shop");return}state.energy--;state.spins++;state.missions.spin=true;const outcomes=[{n:50,x:30},{n:100,x:50},{n:150,x:70},{n:250,x:100},{n:25,x:20},{n:500,x:150},{n:75,x:35},{n:200,x:80}];const win=outcomes[Math.floor(Math.random()*outcomes.length)];state.balance+=win.n;state.bestWin=Math.max(state.bestWin,win.n);addXp(win.x);const wheel=$("wheel");if(wheel)wheel.style.transform=`rotate(${1440+Math.floor(Math.random()*720)}deg)`;render();toast("🎉 Demo win: +"+win.n+" TNV · +"+win.x+" XP");}
-function claimDaily(){const today=new Date().toISOString().slice(0,10);if(state.dailyClaimed===today){toast("Daily reward already claimed in this browser today.");return}state.dailyClaimed=today;state.balance+=500;state.missions.daily=true;addXp(100);render();toast("🎁 +500 demo TNV claimed!")}
-function claimFreeEnergy(){const today=new Date().toISOString().slice(0,10);if(state.freeEnergyClaimed===today){toast("Free energy already claimed today.");return}state.freeEnergyClaimed=today;state.energy=Math.min(state.maxEnergy,state.energy+10);render();toast("⚡ Daily demo Energy refilled!")}
-function buyUpgrade(id){const p=CONFIG.upgrades.find(x=>x.id===id);if(!p||state.upgrades.includes(id))return;if(state.balance<p.cost){toast("Not enough demo TNV.");return}state.balance-=p.cost;state.upgrades.push(id);if(id==="capacity"){state.maxEnergy+=5;state.energy+=5}addXp(80);render();toast("✨ Upgrade activated in demo mode.")}
-function buyBoost(id){const p=CONFIG.boosts.find(x=>x.id===id);if(!p)return;if(state.balance<p.cost){toast("Not enough demo TNV.");return}state.balance-=p.cost;state.boosts.push({id,at:Date.now()});addXp(40);render();toast("🚀 Boost activated in demo mode.")}
-function buyPack(id){const p=CONFIG.energyPacks.find(x=>x.id===id);if(!p)return;if(!state.wallet){toast("Connect TON wallet first in Wallet tab.");showPage("wallet");return}toast("Checkout is not enabled in prototype. Worker + TON transaction verification must be added first.");}
-function copyReferral(){const s=$("ref-link").textContent;if(!s.startsWith("https://")){toast("Open the game from Telegram first.");return}if(navigator.clipboard?.writeText)navigator.clipboard.writeText(s).then(()=>toast("Referral link copied!")).catch(()=>toast(s));else toast(s)}
-function shareReferral(){const s=$("ref-link").textContent;if(!s.startsWith("https://")){toast("Open the game from Telegram first.");return}const url="https://t.me/share/url?url="+encodeURIComponent(s)+"&text="+encodeURIComponent("Join me on TapNova Moon Rush!");if(window.Telegram?.WebApp?.openTelegramLink)Telegram.WebApp.openTelegramLink(url);else location.href=url}
-let tonUI=null;function initWallet(){if(tonUI||!window.TON_CONNECT_UI)return;try{tonUI=new TON_CONNECT_UI.TonConnectUI({manifestUrl:CONFIG.tonManifestUrl,buttonRootId:"ton-connect"});tonUI.onStatusChange(w=>{state.wallet=w?.account?.address||"";$("wallet-status").textContent=state.wallet?"Wallet connected. Purchases remain disabled until the Worker verifies transactions.":"Wallet not connected."; $("wallet-address").textContent=state.wallet?state.wallet:"";render()})}catch(e){$("wallet-status").textContent="TON Connect unavailable in this browser. "+e.message}}
-function initTelegram(){const tg=window.Telegram?.WebApp;if(tg){tg.ready();tg.expand();const u=tg.initDataUnsafe?.user;$("app-status").textContent=u?("Telegram · "+(u.first_name||"Player")):"Telegram data missing";if(!u)$("app-status").textContent="Preview mode · no Telegram data";}else $("app-status").textContent="Browser preview · demo mode";initWallet()}
-function resetDemo(){if(confirm("Reset this browser's demo progress?")){localStorage.removeItem("tapnova_moonrush_demo");state={...defaults,missions:{...defaults.missions}};render();toast("Demo progress reset.")}}
-loadDemo();initTelegram();render();
+function spin(){
+  if(state.energy<1){toast('Energy सकियो — Free Energy वा Shop प्रयोग गर्नुहोस्।');return;}
+  state.energy--; state.spins++;
+  const r=Math.random();
+  const prize = r<.04?500:r<.18?100:r<.55?30:r<.82?10:5;
+  const earned=prize*state.multiplier; state.balance+=earned; state.missions.spin=true;
+  record('Spin reward','+'+earned+' TNV · '+prize+' base');
+  save(); toast('🎉 Spin reward: +'+fmt(earned)+' TNV');
+}
+function claimDaily(){
+  if(state.lastDaily===todayUTC()){toast('आजको Daily Reward पहिले नै Claim गर्नुभएको छ।');return;}
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  state.streak = state.lastDaily===yesterday ? state.streak+1 : Math.max(1,state.streak);
+  state.lastDaily=todayUTC(); state.balance+=500; state.activityDays++;
+  record('Daily reward','+500 TNV'); save(); toast('🎁 +500 TNV Daily Reward Claim भयो!');
+}
+function claimFreeEnergy(){
+  if(state.lastFreeEnergy===todayUTC()){toast('आजको Free Energy पहिले नै Claim गर्नुभएको छ।');return;}
+  state.lastFreeEnergy=todayUTC(); state.energy=state.maxEnergy; record('Free energy','Energy refilled'); save(); toast('⚡ Energy भरियो!');
+}
+function upgrade(kind){
+  if(kind==='cap'){if(state.balance<750){toast('750 TNV चाहिन्छ।');return;}state.balance-=750;state.maxEnergy+=5;state.energy=Math.min(state.maxEnergy,state.energy+5);state.missions.upgrade=true;record('Capacity upgrade','Maximum energy +5');}
+  else {if(state.balance<1500){toast('1,500 TNV चाहिन्छ।');return;}state.balance-=1500;state.multiplier++;state.missions.upgrade=true;record('Spin multiplier upgrade','Multiplier ×'+state.multiplier);}
+  save();toast('Upgrade सफल भयो (demo)!');
+}
+const missions=[
+ {id:'tap',icon:'👆',title:'Charge the Core',desc:'Tap the Moon Core at least once.',reward:100,check:()=>state.taps>0},
+ {id:'spin',icon:'🎰',title:'First Spin',desc:'Complete one Spin.',reward:200,check:()=>state.spins>0},
+ {id:'upgrade',icon:'🚀',title:'Power Up',desc:'Buy a permanent upgrade with demo TNV.',reward:300,check:()=>state.missions.upgrade},
+ {id:'invite',icon:'🧑‍🚀',title:'Invite a Friend',desc:'Referral is server-validated in production.',reward:250,check:()=>state.refCount>0}
+];
+function claimMission(id){
+ const m=missions.find(x=>x.id===id); if(!m)return;
+ if(state.claimedMissions.includes(id)){toast('यो Mission Reward पहिले नै Claim भइसकेको छ।');return;}
+ if(!m.check()){toast('पहिले Mission पूरा गर्नुहोस्।');return;}
+ state.claimedMissions.push(id);state.balance+=m.reward;record('Mission reward','+'+m.reward+' TNV · '+m.title);save();toast('Mission reward +'+m.reward+' TNV!');
+}
+function renderMission(m, compact=false){
+ const done=m.check(), claimed=state.claimedMissions.includes(m.id);
+ return `<div class="card"><div class="rowitem"><div style="font-size:25px">${m.icon}</div><div class="content"><h3>${m.title}</h3><p>${m.desc}</p><div class="small">${claimed?'Reward claimed':done?'Completed · Ready to claim':'Reward: '+m.reward+' TNV'}</div></div><button class="btn ${done&&!claimed?'green':''}" data-claim="${m.id}" ${!done||claimed?'disabled':''}>${claimed?'Claimed':done?'Claim':'Locked'}</button></div></div>`;
+}
+const packs=[{ton:'0.05',energy:50,title:'Starter',emoji:'🔋'},{ton:'0.20',energy:250,title:'Explorer',emoji:'⚡'},{ton:'0.50',energy:800,title:'Cosmic',emoji:'🌠'},{ton:'1.00',energy:2000,title:'Galaxy',emoji:'🚀'}];
+function render(){
+ $('balance').textContent=fmt(state.balance);$('energy-top').textContent=state.energy+' / '+state.maxEnergy;$('spin-count').textContent=fmt(state.spins);$('streak').textContent=state.streak+' day'+(state.streak===1?'':'s');
+ $('energy-text').textContent=state.energy+' / '+state.maxEnergy;$('energy-bar').style.width=(state.maxEnergy?100*state.energy/state.maxEnergy:0)+'%';
+ $('spin-btn').disabled=state.energy<1;$('free-energy-btn').textContent=state.lastFreeEnergy===todayUTC()?'✓ Energy Claimed':'⚡ Free Energy';
+ $('daily-state').textContent=state.lastDaily===todayUTC()?'Claimed today':'Available today';$('daily-claim').disabled=state.lastDaily===todayUTC();$('streak-detail').textContent=state.streak+' day'+(state.streak===1?'':'s');$('streak-bar').style.width=Math.min(100,state.streak/7*100)+'%';
+ $('ref-count').textContent=state.refCount;$('ref-reward').textContent=fmt(state.refReward);$('profile-spins').textContent=state.spins;$('profile-taps').textContent=state.taps;$('profile-missions').textContent=state.claimedMissions.length;
+ const userName=telegramUser ? [telegramUser.first_name,telegramUser.last_name].filter(Boolean).join(' ') : 'Moon Explorer';
+ $('user-line').textContent=telegramUser?'👋 '+userName+' • Telegram Mini App':'Moon Rush • Guest mode';$('profile-name').textContent=userName;$('profile-id').textContent=telegramUser?'Telegram ID: '+telegramUser.id:'Telegram user not detected';
+ $('telegram-state').textContent=telegramUser?'Telegram user detected (server verification still required)':'Browser / demo mode';$('telegram-badge').textContent=telegramUser?'DETECTED':'DEMO';
+ $('ref-link').textContent=telegramUser?'https://t.me/TapNovaEarnBot?startapp=ref_'+telegramUser.id:'Open inside Telegram to create your invite link.';
+ $('ton-packages').innerHTML=packs.map((p,i)=>`<div class="item"><div class="emoji">${p.emoji}</div><h3>${p.title} Energy</h3><p>${fmt(p.energy)} Energy boost</p><b>${p.ton} TON</b><button class="btn primary" style="margin-top:10px" data-buy="${i}">Buy package</button></div>`).join('');
+ $('mission-list').innerHTML=missions.map(m=>renderMission(m)).join('');$('quick-missions').innerHTML=missions.slice(0,2).map(m=>renderMission(m,true)).join('');
+ const score=Math.min(100,Math.floor(state.spins*8+Math.min(state.taps,30)+state.claimedMissions.length*10+Math.min(state.streak,7)*3));
+ $('activity-score').textContent=score+' / 100';$('activity-bar').style.width=score+'%';
+ $('eligibility-list').innerHTML=[
+  ['Telegram account detected',!!telegramUser],
+  ['Completed at least 5 Spins',state.spins>=5],
+  ['Claimed a daily reward',!!state.lastDaily],
+  ['Completed 2 missions',state.claimedMissions.length>=2],
+  ['Referral validated by server',false]
+ ].map(([t,ok])=>`<div class="rowitem" style="margin:11px 0"><div class="content"><h3>${t}</h3></div><span class="badge" style="${ok?'color:var(--green);background:#17372d':''}">${ok?'DONE':'PENDING'}</span></div>`).join('');
+ $('activity-record').innerHTML=state.history.length?state.history.map(h=>`<div class="card"><div class="rowitem"><div class="content"><h3>${h.title}</h3><p>${h.detail}</p><div class="small">${new Date(h.date).toLocaleString()}</div></div></div></div>`).join(''):'<div class="card muted">No activity yet. Start playing to create a demo record.</div>';
+ $('leaderboard').innerHTML=[
+  {name:userName,score:state.balance,place:1},
+  {name:'NovaPilot',score:4820,place:2},
+  {name:'MoonRider',score:3910,place:3}
+ ].sort((a,b)=>b.score-a.score).map((u,i)=>`<div class="card rowitem"><div class="rank">#${i+1}</div><div class="content"><h3>${u.name}</h3><p>${fmt(u.score)} TNV</p></div><span class="badge">${i===0?'YOU':'CREW'}</span></div>`).join('');
+}
+$('tap-orb').addEventListener('click',tap);$('spin-btn').addEventListener('click',spin);
+$('free-energy-btn').addEventListener('click',claimFreeEnergy);$('free-home').addEventListener('click',claimFreeEnergy);$('daily-claim').addEventListener('click',claimDaily);
+$('upgrade-home').addEventListener('click',()=>upgrade('cap'));$('upgrade-cap').addEventListener('click',()=>upgrade('cap'));$('upgrade-mult').addEventListener('click',()=>upgrade('mult'));
+document.addEventListener('click',e=>{
+ const c=e.target.closest('[data-claim]');if(c)claimMission(c.dataset.claim);
+ const b=e.target.closest('[data-buy]');if(b)buyPackage(Number(b.dataset.buy));
+});
+$('copy-ref').addEventListener('click',async()=>{const s=$('ref-link').textContent;if(!s.startsWith('https://')){toast('Telegram भित्र खोल्नुहोस्।');return;}try{await navigator.clipboard.writeText(s);toast('Invite link copied!');}catch(e){toast('Link copy गर्न नसकेमा text लामो थिचेर copy गर्नुहोस्।');}});
+$('share-ref').addEventListener('click',()=>{const s=$('ref-link').textContent;if(!s.startsWith('https://')){toast('Telegram भित्र खोल्नुहोस्।');return;}const share='https://t.me/share/url?url='+encodeURIComponent(s)+'&text='+encodeURIComponent('Join me on TapNova Moon Rush!');if(tg&&tg.openTelegramLink)tg.openTelegramLink(share);else window.open(share,'_blank');});
+$('reset-demo').addEventListener('click',()=>{if(confirm('Reset all local demo progress in this browser?')){state=defaults();save();toast('Demo progress reset.');}});
+async function initTon(){
+ if(tonUI)return;
+ if(!window.TON_CONNECT_UI||!window.TON_CONNECT_UI.TonConnectUI){$('wallet-status').textContent='TON Connect library failed to load. Check internet and reload.';return;}
+ try{
+  tonUI=new TON_CONNECT_UI.TonConnectUI({manifestUrl:TON_MANIFEST_URL,buttonRootId:'ton-connect-root'});
+  tonUI.onStatusChange(w=>{
+   state.walletAddress=w&&w.account?w.account.address:'';
+   $('wallet-status').textContent=state.walletAddress?'Connected wallet: '+state.walletAddress:'Wallet not connected.';
+   save();
+  });
+ }catch(e){$('wallet-status').textContent='TON Connect could not initialize: '+(e.message||'unknown error');}
+}
+async function buyPackage(index){
+ const pack=packs[index]; if(!pack)return;
+ go('shop'); await initTon();
+ if(!tonUI||!tonUI.wallet){toast('पहिले TON Wallet Connect गर्नुहोस्।');return;}
+ if(!TON_RECEIVER_ADDRESS){$('payment-status').textContent='Payment disabled: set the verified TON_RECEIVER_ADDRESS in the source and deploy a server-side payment verifier first.';toast('Payment अहिले सुरक्षित रूपमा बन्द छ।');return;}
+ try{
+  const nano=String(BigInt(pack.ton.split('.')[0]||'0')*1000000000n+BigInt((pack.ton.split('.')[1]||'').padEnd(9,'0').slice(0,9)||'0'));
+  const tx={validUntil:Math.floor(Date.now()/1000)+300,messages:[{address:TON_RECEIVER_ADDRESS,amount:nano}]};
+  await tonUI.sendTransaction(tx);
+  $('payment-status').textContent='Wallet request submitted for '+pack.ton+' TON. NOT verified yet. Energy will not be credited until Worker confirms the on-chain payment.';
+  toast('Wallet request sent; waiting for server verification.');
+ }catch(e){$('payment-status').textContent='Payment cancelled or failed: '+(e.message||'wallet error');}
+}
+render();
+if(telegramUser && tg && tg.initData){$('mode-pill').textContent='TELEGRAM';}
+})();
 </script>
 </body>
-</html>
+</html>'''
+p.write_text(html,encoding="utf-8")
+print(f"Created {p} ({p.stat().st_size:,} bytes)")
