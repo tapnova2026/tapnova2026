@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#101326">
+<title>TapNova — TON Wallet & Payment Test</title>
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#0c1020;--panel:#151b31;--line:#2c3658;--text:#f4f6ff;--muted:#aab4d3;--cyan:#62e7ff;--purple:#9c7cff;--good:#73e6ad;--warn:#ffd47a;--bad:#ff9292}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#20294b 0,#0c1020 55%);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+main{width:min(760px,100%);margin:auto;padding:22px 16px 48px}.brand{font-weight:900;letter-spacing:.08em;font-size:23px}.brand span{color:var(--cyan)}.sub{color:var(--muted);margin:5px 0 22px}
+.card{background:rgba(21,27,49,.95);border:1px solid var(--line);border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 12px 32px #0003}
+h1{font-size:24px;margin:8px 0}h2{font-size:18px;margin:0 0 12px}.muted{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:#dbe2ff;margin:12px 0 6px}
+input,select{width:100%;background:#0d1326;border:1px solid #3b476e;color:var(--text);border-radius:12px;padding:12px;font:inherit}
+button{border:0;border-radius:12px;padding:12px 16px;font:700 15px system-ui;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}.primary{background:linear-gradient(100deg,var(--cyan),#9d9bff);color:#101326}.secondary{background:#273252;color:white;border:1px solid #43517b}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+#connect-root{min-height:46px}.status{border-radius:12px;background:#0d1326;border:1px solid var(--line);padding:12px;margin-top:12px;overflow-wrap:anywhere}.status.good{border-color:#286e53;color:var(--good)}.status.warn{border-color:#80632b;color:var(--warn)}.status.bad{border-color:#85454b;color:var(--bad)}
+.small{font-size:12px;color:var(--muted)}.pill{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:3px 9px;color:var(--muted);font-size:12px}
+ul{padding-left:20px}.notice{border-left:3px solid var(--warn);padding:9px 12px;background:#332a1b55;border-radius:8px;font-size:14px}
+a{color:var(--cyan)}footer{color:var(--muted);font-size:12px;text-align:center;padding:12px}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">🚀 TAP<span>NOVA</span></div>
+  <div class="sub">TON Connect + payment request test page <span class="pill">TEST TOOL</span></div>
+  <h1>Connect your TON wallet</h1>
+  <p class="muted">Connect a wallet first. Payment requests are sent through TON Connect; this page does not itself verify blockchain confirmation.</p>
+
+  <section class="card">
+    <h2>1. Wallet connection</h2>
+    <div id="connect-root"></div>
+    <div id="wallet-status" class="status">Wallet not connected yet.</div>
+    <div class="small">If the wallet button does not appear, check that the manifest URL below is publicly accessible over HTTPS.</div>
+  </section>
+
+  <section class="card">
+    <h2>2. Payment test</h2>
+    <div class="notice">Important: TON transfers are generally irreversible. Confirm the receiving address and amount in your wallet before approving. Do not send real funds until you have tested the app and verified the receiving address.</div>
+    <label for="receiver">Receiving TON address</label>
+    <input id="receiver" autocomplete="off" spellcheck="false" placeholder="Paste your project’s TON receiving address">
+    <label for="amount">Payment amount</label>
+    <select id="amount">
+      <option value="0.05">0.05 TON — test package</option>
+      <option value="0.20">0.20 TON — energy package</option>
+      <option value="0.50">0.50 TON — energy package</option>
+      <option value="1.00">1.00 TON — energy package</option>
+    </select>
+    <label for="memo">Payment reference (optional)</label>
+    <input id="memo" maxlength="64" value="TapNova energy test" placeholder="Payment reference">
+    <div class="actions">
+      <button class="primary" id="pay-btn" disabled>Connect wallet first</button>
+      <button class="secondary" id="clear-btn" type="button">Clear status</button>
+    </div>
+    <div id="payment-status" class="status">No payment request sent.</div>
+    <p class="small">This test page only requests a transfer. It does not grant energy or eligibility and does not prove a payment was confirmed. A server-side Cloudflare Worker must verify the transaction on TON before crediting anything.</p>
+  </section>
+
+  <section class="card">
+    <h2>3. Before using this with the game</h2>
+    <ul class="muted">
+      <li>Upload <code>tonconnect-manifest.json</code> to a public HTTPS URL.</li>
+      <li>Set the exact project receiving address above and check it carefully.</li>
+      <li>Configure the HTML with the correct manifest URL.</li>
+      <li>Connect the page to a Worker that verifies confirmed TON transactions and prevents duplicate transaction claims.</li>
+      <li>Only after server verification should the Worker credit purchased energy in D1.</li>
+    </ul>
+  </section>
+  <footer>TapNova wallet/payment test • No real payment is verified by this standalone page.</footer>
+</main>
+<script>
+(() => {
+  'use strict';
+
+  // This URL must point to the publicly hosted tonconnect-manifest.json file.
+  // Update it if you host the manifest somewhere else.
+  const MANIFEST_URL = 'https://tapnova2026.github.io/tapnova2026/tonconnect-manifest.json';
+
+  const $ = (id) => document.getElementById(id);
+  const walletStatus = $('wallet-status');
+  const paymentStatus = $('payment-status');
+  const payBtn = $('pay-btn');
+  let tonConnectUI = null;
+
+  function setStatus(el, message, kind) {
+    el.textContent = message;
+    el.className = 'status' + (kind ? ' ' + kind : '');
+  }
+
+  function validTonAddress(value) {
+    const s = value.trim();
+    // TON user-friendly addresses (EQ/UQ, kQ/0Q variants) or raw workchain:hex.
+    return /^(?:[EU]Q|[k0]Q)[A-Za-z0-9_-]{46}$/.test(s) ||
+           /^-?\d:[0-9a-fA-F]{64}$/.test(s);
+  }
+
+  function toNanoString(tonAmount) {
+    // Convert decimal TON to nanoton integer without floating point rounding.
+    const parts = String(tonAmount).split('.');
+    const whole = parts[0] || '0';
+    const fraction = (parts[1] || '').padEnd(9, '0').slice(0, 9);
+    return (BigInt(whole) * 1000000000n + BigInt(fraction || '0')).toString();
+  }
+
+  function updateWalletUI(wallet) {
+    const account = wallet && wallet.account;
+    if (account && account.address) {
+      setStatus(walletStatus, 'Connected. Wallet address: ' + account.address, 'good');
+      payBtn.disabled = false;
+      payBtn.textContent = 'Request payment in wallet';
+    } else {
+      setStatus(walletStatus, 'Wallet not connected yet.', '');
+      payBtn.disabled = true;
+      payBtn.textContent = 'Connect wallet first';
+    }
+  }
+
+  async function init() {
+    if (!window.TON_CONNECT_UI || !window.TON_CONNECT_UI.TonConnectUI) {
+      setStatus(walletStatus, 'TON Connect library did not load. Check your internet connection and reload.', 'bad');
+      return;
+    }
+    try {
+      tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: MANIFEST_URL,
+        buttonRootId: 'connect-root'
+      });
+      tonConnectUI.onStatusChange(updateWalletUI);
+      updateWalletUI(tonConnectUI.wallet);
+    } catch (e) {
+      setStatus(walletStatus, 'Could not initialize TON Connect: ' + (e && e.message ? e.message : 'unknown error'), 'bad');
+    }
+  }
+
+  payBtn.addEventListener('click', async () => {
+    if (!tonConnectUI || !tonConnectUI.wallet) {
+      setStatus(paymentStatus, 'Connect your wallet before requesting a payment.', 'warn');
+      return;
+    }
+    const receiver = $('receiver').value.trim();
+    if (!validTonAddress(receiver)) {
+      setStatus(paymentStatus, 'Enter a valid TON receiving address. Check every character before sending.', 'bad');
+      return;
+    }
+    const amount = $('amount').value;
+    const memo = $('memo').value.trim();
+    payBtn.disabled = true;
+    payBtn.textContent = 'Waiting for wallet…';
+    try {
+      const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 300,
+        messages: [{
+          address: receiver,
+          amount: toNanoString(amount)
+        }]
+      };
+      // TON Connect UI's basic transaction message does not attach arbitrary text.
+      // Memo/reference is displayed for the user; production needs a verified,
+      // unique on-chain reference or a server reconciliation strategy.
+      await tonConnectUI.sendTransaction(transaction);
+      setStatus(paymentStatus,
+        'Wallet accepted/submitted the transaction request for ' + amount +
+        ' TON. This is NOT server-confirmed payment. Reference: ' +
+        (memo || 'none') +
+        '. Do not credit energy until your Worker verifies the confirmed transaction on-chain.',
+        'warn');
+    } catch (e) {
+      setStatus(paymentStatus, 'Transaction was not completed or was rejected: ' +
+        (e && e.message ? e.message : 'wallet error'), 'bad');
+    } finally {
+      payBtn.disabled = !tonConnectUI || !tonConnectUI.wallet;
+      payBtn.textContent = payBtn.disabled ? 'Connect wallet first' : 'Request payment in wallet';
+    }
+  });
+
+  $('clear-btn').addEventListener('click', () => setStatus(paymentStatus, 'No payment request sent.', ''));
+  init();
+})();
+</script>
+</body>
+</html>
