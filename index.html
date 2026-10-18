@@ -15,7 +15,7 @@
 .wheel:before{content:'';position:absolute;inset:10px;border-radius:50%;border:1px solid #ffffff88}
 .wheel-label{position:absolute;left:50%;top:50%;width:50%;height:1px;transform-origin:left center;color:white;font-weight:950;text-shadow:0 2px 4px #000;font-size:17px}
 .wheel-label span{position:absolute;left:42%;top:-16px;transform:translateX(-50%) rotate(0deg);white-space:nowrap}
-.wheel-label:nth-child(1){transform:rotate(-30deg)}.wheel-label:nth-child(2){transform:rotate(30deg)}.wheel-label:nth-child(3){transform:rotate(90deg)}.wheel-label:nth-child(4){transform:rotate(150deg)}.wheel-label:nth-child(5){transform:rotate(210deg)}.wheel-label:nth-child(6){transform:rotate(270deg)}
+.wheel-label:nth-child(1){transform:rotate(0deg)}.wheel-label:nth-child(2){transform:rotate(60deg)}.wheel-label:nth-child(3){transform:rotate(120deg)}.wheel-label:nth-child(4){transform:rotate(180deg)}.wheel-label:nth-child(5){transform:rotate(240deg)}.wheel-label:nth-child(6){transform:rotate(300deg)}
 .wheel-pointer{position:absolute;z-index:3;top:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;border-top:0;border-bottom:34px solid #fff0ad;filter:drop-shadow(0 3px 4px #000)}
 .wheel-core{position:absolute;z-index:2;width:78px;height:78px;border-radius:50%;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 35% 25%,#fff,#8cf5ff 16%,#6658ef 58%,#1a153f 85%);border:4px solid #fff0ad;box-shadow:0 0 22px #66e9ff99;color:#fff;font-size:13px;font-weight:1000;line-height:1.1}
 .prize-legend{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}
@@ -155,7 +155,7 @@ async function spin(){
   if(Number.isFinite(amount)&&amount>0){
    const prizes=[5,10,20,50,100,500];const idx=Math.max(0,prizes.indexOf(amount));
    const segment=idx<0?0:idx;const base=wheelRotation%360;
-   wheelRotation+=((360-(base+segment*60+30)%360)%360);wheel.style.transform='rotate('+wheelRotation+'deg)';
+   wheelRotation+=((360-(base+segment*60)%360)%360);wheel.style.transform='rotate('+wheelRotation+'deg)';
    $('lastamount').textContent='+'+fmt(amount)+' TNV';
    $('lastmessage').textContent=amount===500?'🌠 JACKPOT! Server confirmed your prize.':'Server confirmed your prize.';
    toast(amount===500?'🌠 JACKPOT! +500 TNV':'🎉 Server verified +'+fmt(amount)+' TNV');
