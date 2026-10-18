@@ -27,7 +27,7 @@
 <section class="screen" id="shop">
  <div class="hero"><div class="hero-emoji">🔋</div><div class="eyebrow">Season 01</div><h2>MOON RUSH SHOP</h2><p>Charge up for your next adventure.</p></div>
  <div class="tabs"><button class="tab active" onclick="shopTab('energy',this)">Energy</button><button class="tab" onclick="shopTab('boost',this)">Boost</button><button class="tab" onclick="shopTab('season',this)">Season Items</button></div><div id="shopList"></div>
- <div class="notice">Wallet connect उपलब्ध छ। वास्तविक TON खरिद अहिले बन्द छ: transaction memo, सही रकम र Worker बाट on-chain verification परीक्षण नगरी TON नपठाउनुहोस्। Wallet जोडिनु payment proof होइन।</div>
+ <div class="notice">TON खरिद गर्दा Telegram Open App authentication र Worker verification आवश्यक छ। सही रकम र memo सहित मात्र पठाउनुहोस्। Transaction hash पुष्टि नभएसम्म reward थपिँदैन। पहिले सानो रकमबाट परीक्षण गर्नुहोस्; समस्या आएमा दोहोर्‍याएर TON नपठाउनुहोस्।</div>
 </section>
 <section class="screen" id="album">
  <div class="hero"><div class="hero-emoji">🪐</div><div class="eyebrow">Season 01</div><h2>MOON RUSH ALBUM</h2><p>Collect all 90 stickers and unlock season rewards.</p><div class="row between" style="margin-top:10px"><span id="stickerCount">12 / 90 collected</span><span>🎁</span></div><div class="progress"><span id="albumProgress" style="width:13%"></span></div></div>
@@ -60,6 +60,7 @@
 <script>
 const TON_MANIFEST_URL='https://tapnova2026.github.io/tapnova2026/tonconnect-manifest.json';
 const TON_PROJECT_WALLET='UQAbrZTySlI0f0km5LJkGfSndWhCOchOJfa9PPAhiyQdb9lF';
+const TAPNOVA_API_BASE='https://tapnova-api.verikarnalicollege.workers.dev';
 let tonConnectUI=null;
 let walletStatusText='Wallet not connected';
 function walletShort(address){return address?address.slice(0,6)+'…'+address.slice(-5):''}
@@ -86,8 +87,31 @@ function lootBox(){if(state.energy<5){toast('Need 5 Energy to open a Loot Box.')
 function spin(){if(state.energy<1){toast('Need 1 Energy to spin.');return}const btn=$('spinBtn');btn.disabled=true;state.energy--;document.querySelectorAll('.reel').forEach(r=>r.classList.add('spin'));let ticks=0;const symbols=['🪙','⚡','🎁','🌙','💎','🚀','🪐','🧰'];const timer=setInterval(()=>{['reel1','reel2','reel3'].forEach(id=>$(id).textContent=symbols[Math.floor(Math.random()*symbols.length)]);ticks++;if(ticks>12){clearInterval(timer);document.querySelectorAll('.reel').forEach(r=>r.classList.remove('spin'));const a=symbols[Math.floor(Math.random()*symbols.length)],b=symbols[Math.floor(Math.random()*symbols.length)],c=symbols[Math.floor(Math.random()*symbols.length)];$('reel1').textContent=a;$('reel2').textContent=b;$('reel3').textContent=c;let reward=50;if(a===b&&b===c)reward=5000;else if(a===b||b===c||a===c)reward=500;state.balance+=reward;state.spins++;state.missions.spin++;$('lastResult').textContent='+'+fmt(reward)+' demo TNV';btn.disabled=false;toast('Spin result: '+a+' '+b+' '+c+' · +'+fmt(reward)+' demo points');update();}} ,85)}
 function wheel(){const rewards=['+100 Energy','+500 TNV points','+1 Sticker','+1,000 TNV points','Bonus Loot Box'];const result=rewards[Math.floor(Math.random()*rewards.length)];if($('wheelResult'))$('wheelResult').textContent='Result: '+result;if(result.includes('Energy'))state.energy+=100;if(result.includes('Sticker')){state.stickers=Math.min(90,state.stickers+1);renderStickers()}if(result.includes('500'))state.balance+=500;if(result.includes('1,000'))state.balance+=1000;if(result.includes('Loot'))state.missions.loot++;state.spins++;update();toast('Wheel result: '+result+' (demo only)')}
 function shopTab(kind,el){state.shop=kind;document.querySelectorAll('#shop .tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderShop()}
-const packs={energy:[['🔋','Starter Pack','100 Energy','0.10 TON',100],['⚡','Explorer Pack','300 Energy','0.25 TON',300],['🔋','Captain Pack','700 Energy','0.50 TON',700],['📦','Commander Pack','1,600 Energy','1.00 TON',1600],['🎁','Galaxy Pack','4,500 Energy','2.50 TON',4500],['💎','Universe Pack','10,000 Energy','5.00 TON',10000]],boost:[['🚀','Double Boost','2× for 1 hour','0.10 TON',2],['🌟','Triple Boost','3× for 3 hours','0.25 TON',3],['💫','Super Boost','5× for 6 hours','0.50 TON',5],['🪐','Ultra Boost','10× for 24 hours','1.00 TON',10]],season:[['🎁','Moon Rush Chest','Season loot chest','500 Energy',500],['🌙','Moon Explorer Skin','Limited season cosmetic','1,000 Energy',1000],['🏅','Season Badge','Moon Rush profile badge','2,500 Energy',2500]]};
-function renderShop(){const list=$('shopList');list.innerHTML='';packs[state.shop].forEach(p=>{const d=document.createElement('div');d.className='card pack';d.innerHTML=`<div class="packico">${p[0]}</div><div class="grow"><h3>${p[1]}</h3><p>${p[2]}</p><div class="price">${p[3]}</div></div><button class="green">${state.shop==='season'?'Redeem':'Buy'}</button>`;d.querySelector('button').onclick=()=>{if(state.shop==='season'){if(state.energy<p[4]){toast('Not enough Energy for this item.');return}state.energy-=p[4];toast(p[1]+' unlocked in demo!');}else toast('Purchase is disabled until Telegram + verified TON payment backend is connected.');update()};list.appendChild(d)})}
+const packs={energy:[['🔋','Starter Pack','100 Energy','0.10 TON',100,'energy_010'],['⚡','Explorer Pack','300 Energy','0.25 TON',300,'energy_025'],['🔋','Captain Pack','700 Energy','0.50 TON',700,'energy_050'],['📦','Commander Pack','1,600 Energy','1.00 TON',1600,'energy_100'],['🎁','Galaxy Pack','4,500 Energy','2.50 TON',4500,'energy_250'],['💎','Universe Pack','10,000 Energy','5.00 TON',10000,'energy_500']],boost:[['🚀','Double Boost','2× for 1 hour','0.10 TON',2,'boost_2x_1h'],['🌟','Triple Boost','3× for 3 hours','0.25 TON',3,'boost_3x_3h'],['💫','Super Boost','5× for 6 hours','0.50 TON',5,'boost_5x_6h'],['🪐','Ultra Boost','10× for 24 hours','1.00 TON',10,'boost_10x_24h']],season:[['🎁','Moon Rush Chest','Season loot chest','500 Energy',500],['🌙','Moon Explorer Skin','Limited season cosmetic','1,000 Energy',1000],['🏅','Season Badge','Moon Rush profile badge','2,500 Energy',2500]]};
+async function startTonPurchase(paymentType,packageId,packageName){
+ const tg=window.Telegram&&window.Telegram.WebApp;
+ if(!tg||!tg.initData){toast('खरिद गर्न Telegram Bot को Open App बाट गेम खोल्नुहोस्।');return;}
+ if(!packageId){toast('यो Season item अहिले demo मात्र हो।');return;}
+ try{
+  toast('Payment request बनाउँदै…');
+  const response=await fetch(TAPNOVA_API_BASE+'/api/payment/create',{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Init-Data':tg.initData},body:JSON.stringify({paymentType,packageId})});
+  const data=await response.json();
+  if(!response.ok||!data.ok||!data.payment)throw new Error(data.error||'Payment intent बनाउन सकिएन');
+  const p=data.payment;
+  const instructions='TapNova खरिद: '+packageName+'\n\nरकम: '+p.amountTon+' TON\nप्राप्तकर्ता: '+p.recipient+'\nMemo (ठ्याक्कै यही राख्नुहोस्): '+p.memo+'\n\nअर्को चरणमा wallet खोलेर यो ठ्याक्कै रकम र memo सहित पठाउनुहोस्। Memo नहाले reward पुष्टि हुँदैन।\n\nभुक्तानी गरेपछि transaction hash यहाँ राख्नुहोस्।';
+  try{await navigator.clipboard.writeText(p.memo);}catch(e){}
+  alert(instructions);
+  const txHash=prompt('भुक्तानी पठाइसकेपछि Wallet/TON Explorer बाट transaction hash copy गरेर यहाँ राख्नुहोस्। भुक्तानी नगरे Cancel थिच्नुहोस्।');
+  if(!txHash||!txHash.trim()){toast('Verification रोकियो। कुनै reward थपिएको छैन।');return;}
+  toast('TON transaction जाँच हुँदैछ…');
+  const vr=await fetch(TAPNOVA_API_BASE+'/api/payment/verify',{method:'POST',headers:{'Content-Type':'application/json','X-Telegram-Init-Data':tg.initData},body:JSON.stringify({intentId:p.intentId,txHash:txHash.trim()})});
+  const vd=await vr.json();
+  if(!vr.ok||!vd.ok||!vd.credited){throw new Error(vd.error||'भुक्तानी प्रमाणित भएन; reward थपिएको छैन।')}
+  toast('भुक्तानी प्रमाणित भयो। Reward थपियो।');
+  alert('खरिद सफल भयो। '+(vd.paymentType==='energy'?'Energy: '+(vd.reward&&vd.reward.energy||0):'Boost: '+(vd.reward&&vd.reward.multiplier||'')+'×'));
+ }catch(e){console.error('TapNova payment:',e);alert('भुक्तानी पुष्टि भएन: '+(e&&e.message?e.message:'अज्ञात त्रुटि')+'\n\nTON फेरि नपठाउनुहोस्। Worker/D1 verification जाँच्नुहोस्।');}
+}
+function renderShop(){const list=$('shopList');list.innerHTML='';packs[state.shop].forEach(p=>{const d=document.createElement('div');d.className='card pack';d.innerHTML=`<div class="packico">${p[0]}</div><div class="grow"><h3>${p[1]}</h3><p>${p[2]}</p><div class="price">${p[3]}</div></div><button class="green">${state.shop==='season'?'Redeem':'Buy'}</button>`;const b=d.querySelector('button');b.onclick=()=>{if(state.shop==='season'){if(state.energy<p[4]){toast('Not enough Energy for this item.');return}state.energy-=p[4];toast(p[1]+' unlocked in demo!');update();return;}startTonPurchase(state.shop,p[5],p[1]);};list.appendChild(d)})}
 const stickers=[['🤖','Nova',3],['🐱','Luna',2],['☄️','Meteor',1],['🦸','Astro',0],['🪐','Galaxy',0],['🚀','Comet',0],['🌌','Nebula',0],['🌘','Eclipse',0],['✨','Celestia',0],['👾','Orbit',0],['🐉','Draco',0],['🌟','Starlight',0]];
 function renderStickers(){const grid=$('stickerGrid');grid.innerHTML='';stickers.forEach((s,i)=>{const d=document.createElement('div');d.className='sticker '+(i>2?'locked':'');d.innerHTML=`<span class="art">${s[0]}</span><strong>${s[1]}</strong><small>${i<3?s[2]+'/9':'0/9'}</small>`;grid.appendChild(d)});const cg=$('characterGrid');cg.innerHTML='';stickers.slice(0,9).forEach((s,i)=>{const d=document.createElement('div');d.className='sticker '+(i>2?'locked':'');d.innerHTML=`<span class="art">${s[0]}</span><strong>${s[1]}</strong><small>${i<3?'Unlocked':'Locked'}</small>`;cg.appendChild(d)})}
 function albumTab(kind,el){document.querySelectorAll('#album .tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');$('albumStickers').classList.toggle('hidden',kind!=='stickers');$('albumCharacters').classList.toggle('hidden',kind!=='characters');$('albumWheel').classList.toggle('hidden',kind!=='wheel')}
