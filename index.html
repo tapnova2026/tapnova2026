@@ -12,7 +12,7 @@
 <div class="app">
 <header class="top">
  <div class="brandrow"><div class="brand">🚀 TAPNOVA</div><div class="season-pill">SEASON 01 · MOON RUSH</div></div>
- <div class="player"><div class="avatar">🧑🏻‍🚀</div><div class="grow"><div class="playername" id="playerName">Moon Explorer</div><div class="sub">Explorer · Lv. <span id="level">1</span> · <span id="authLabel">Guest preview</span></div></div><button class="secondary" style="padding:8px" onclick="toast('Telegram account is connected only when launched inside Telegram Mini App.')">☰</button></div>
+ <div class="player"><div class="avatar">🧑🏻‍🚀</div><div class="grow"><div class="playername" id="playerName">Moon Explorer</div><div class="sub">Explorer · Lv. <span id="level">1</span> · <span id="authLabel">Guest preview</span></div></div><button class="primary" id="connectWalletBtn" style="padding:8px 10px;font-size:11px;white-space:nowrap" onclick="connectWallet()">🔗 Connect Wallet</button></div>
  <div class="stats"><div class="stat"><span class="ico">🪙</span><div><strong id="balance">12,400,000</strong><small>TNV balance</small></div></div><div class="stat"><span class="ico">⚡</span><div><strong id="energy">50</strong><small>Energy</small></div></div><div class="stat"><span class="ico">🎯</span><div><strong id="spins">0</strong><small>Spins</small></div></div></div>
 </header>
 <main>
@@ -27,7 +27,7 @@
 <section class="screen" id="shop">
  <div class="hero"><div class="hero-emoji">🔋</div><div class="eyebrow">Season 01</div><h2>MOON RUSH SHOP</h2><p>Charge up for your next adventure.</p></div>
  <div class="tabs"><button class="tab active" onclick="shopTab('energy',this)">Energy</button><button class="tab" onclick="shopTab('boost',this)">Boost</button><button class="tab" onclick="shopTab('season',this)">Season Items</button></div><div id="shopList"></div>
- <div class="notice">TON purchases are not enabled in this standalone build. Never treat a wallet popup as payment proof; production purchases require server-side transaction verification.</div>
+ <div class="notice">Wallet connect उपलब्ध छ। वास्तविक TON खरिद अहिले बन्द छ: transaction memo, सही रकम र Worker बाट on-chain verification परीक्षण नगरी TON नपठाउनुहोस्। Wallet जोडिनु payment proof होइन।</div>
 </section>
 <section class="screen" id="album">
  <div class="hero"><div class="hero-emoji">🪐</div><div class="eyebrow">Season 01</div><h2>MOON RUSH ALBUM</h2><p>Collect all 90 stickers and unlock season rewards.</p><div class="row between" style="margin-top:10px"><span id="stickerCount">12 / 90 collected</span><span>🎁</span></div><div class="progress"><span id="albumProgress" style="width:13%"></span></div></div>
@@ -56,7 +56,23 @@
 <nav class="nav"><button class="active" data-tab="play" onclick="switchTab('play')"><span>🚀</span>Play</button><button data-tab="shop" onclick="switchTab('shop')"><span>🛒</span>Shop</button><button data-tab="album" onclick="switchTab('album')"><span>🗂️</span>Album</button><button data-tab="missions" onclick="switchTab('missions')"><span>🎯</span>Missions</button><button data-tab="friends" onclick="switchTab('friends')"><span>👥</span>Friends</button></nav>
 <div class="toast" id="toast"></div>
 </div>
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 <script>
+const TON_MANIFEST_URL='https://tapnova2026.github.io/tapnova2026/tonconnect-manifest.json';
+const TON_PROJECT_WALLET='UQAbrZTySlI0f0km5LJkGfSndWhCOchOJfa9PPAhiyQdb9lF';
+let tonConnectUI=null;
+let walletStatusText='Wallet not connected';
+function walletShort(address){return address?address.slice(0,6)+'…'+address.slice(-5):''}
+function updateWalletButton(wallet){const b=document.getElementById('connectWalletBtn');if(!b)return;if(wallet&&wallet.account&&wallet.account.address){b.textContent='✓ '+walletShort(wallet.account.address);b.title='TON wallet connected';b.style.background='linear-gradient(90deg,#43ef9a,#9dff77)';b.style.color='#082a29';}else{b.textContent='🔗 Connect Wallet';b.title='Connect a TON wallet';b.style.background='';b.style.color='';}}
+async function connectWallet(){
+ const b=document.getElementById('connectWalletBtn');
+ try{
+  if(!window.TON_CONNECT_UI||!window.TON_CONNECT_UI.TonConnectUI){toast('TON Connect library load भएन। Internet जाँचेर पेज फेरि खोल्नुहोस्।');return;}
+  if(!tonConnectUI){tonConnectUI=new window.TON_CONNECT_UI.TonConnectUI({manifestUrl:TON_MANIFEST_URL});tonConnectUI.onStatusChange(wallet=>{updateWalletButton(wallet);if(wallet&&wallet.account&&wallet.account.address){toast('TON Wallet connected: '+walletShort(wallet.account.address));}else{toast('TON Wallet disconnected');}});}
+  if(tonConnectUI.connected){await tonConnectUI.disconnect();updateWalletButton(null);return;}
+  await tonConnectUI.openModal();
+ }catch(e){console.error('TON Connect error:',e);toast('Wallet खोल्न सकिएन: '+(e&&e.message?e.message:'TON Connect error'));}
+}
 const state={balance:12400000,energy:50,spins:0,taps:0,missions:{tap:0,spin:0,loot:0,invite:0},daily:false,freeEnergy:false,stickers:12,unlocked:[0,1,2],shop:'energy'};
 const $=id=>document.getElementById(id);
 function fmt(n){return Math.floor(n).toLocaleString('en-US')}
