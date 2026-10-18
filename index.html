@@ -41,7 +41,8 @@ const API_BASE='https://tapnova-api.verikarnalicollege.workers.dev';
 const TON_MANIFEST_URL='https://tapnova2026.github.io/tapnova2026/tonconnect-manifest.json';
 const $=id=>document.getElementById(id),tg=window.Telegram&&window.Telegram.WebApp;
 if(tg){try{tg.ready();tg.expand()}catch(e){}}
-const initData=tg&&tg.initData?tg.initData:'';
+const launchParams=new URLSearchParams(window.location.search);
+const initData=(tg&&tg.initData)||launchParams.get('tgWebAppData')||'';
 const tgUser=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user?tg.initDataUnsafe.user:null;
 const fmt=n=>Number(n||0).toLocaleString('en-US');
 let ton=null, serverReady=false, busy=false, toastTimer;
@@ -97,7 +98,7 @@ async function refreshMe(){
 }
 async function boot(){
  renderPreview();
- if(!initData){status('tgstatus','Not authenticated. Open this game using Telegram bot → Open App.','warn');$('mode').textContent='PREVIEW ONLY';$('apistatus').textContent='Waiting for Telegram Open App authentication.';return}
+ if(!initData){status('tgstatus','Telegram launch data was not received by this page. Check that BotFather Main Mini App URL points to the current GitHub Pages game, then close and reopen it.','warn');$('mode').textContent='PREVIEW ONLY';$('apistatus').textContent='No Telegram initData found in WebApp or launch URL.';return}
  try{const d=await api('/api/auth','POST',{});applyData(d);await Promise.allSettled([loadReferral(),loadEligibility(),loadLeaderboard()]);renderNonServer();toast('TapNova server मा सुरक्षित रूपमा जोडियो।')}
  catch(e){status('tgstatus',e.message,'bad');$('apistatus').textContent='Login failed: '+e.message;$('apistatus').className='status bad';$('mode').textContent='LOGIN ERROR';$('bal').textContent='—';}
 }
