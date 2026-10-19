@@ -1,40 +1,313 @@
-import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TapNova (TNV) - Boinkers Edition</title>
+    <!-- TON Connect UI Script -->
+    <script src="https://unpkg.com"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --primary-color: #f59e0b;
+            --neon-blue: #38bdf8;
+            --neon-pink: #ec4899;
+            --text-color: #ffffff;
+        }
 
-# तपाईंको बोटको टोकन यहाँ राख्नुहोस्
-API_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
-bot = telebot.TeleBot(API_TOKEN)
+        body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background: linear-gradient(135deg, #1e1b4b, #0f172a);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-@bot.message_handler(commands=['start', 'help'])
-def send_welcome(message):
-    welcome_text = (
-        "🌟 **TapNova (TNV) Boinkers Edition मा स्वागत छ!** 🌟\n\n"
-        "⚡ **यस महिनाको नयाँ प्याकेज: 'Halloween Horror v1.0' अपग्रेड उपलब्ध छ!**\n"
-        "🎮 स्लट घुमाउनुहोस्, पेट (Pet) हुर्काउनुहोस् र जित्नुहोस्।\n"
-        "🔋 इनर्जी सकिएमा चिन्ता नगर्नुहोस्, तपाईंले **TON** मार्फत तुरुन्तै रिचार्ज गर्न सक्नुहुन्छ!"
-    )
-    
-    markup = InlineKeyboardMarkup()
-    # WebApp को लिंक यहाँ जोड्नुहोस्
-    game_button = InlineKeyboardButton(text="🚀 गेम खेल्नुहोस् (Play Now)", web_app=telebot.types.WebAppInfo(url="https://yourgame-webapp.com"))
-    store_button = InlineKeyboardButton(text="🔋 इनर्जी स्टोर (Buy Energy with TON)", callback_data="open_store")
-    
-    markup.add(game_button)
-    markup.add(store_button)
-    
-    bot.send_message(message.chat.id, welcome_text, parse_mode='Markdown', reply_markup=markup)
+        /* Top Header & Wallet Button */
+        header {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+        }
 
-@bot.callback_query_handler(func=lambda call: call.data == "open_store")
-def open_store(call):
-    store_text = (
-        "💎 **TON इनर्जी स्टोर (Monthly Special)** 💎\n\n"
-        "🛒 कृपया आफ्नो प्याकेज छनोट गर्नुहोस्:\n"
-        "📦 **Starter Pack:** 0.5 TON -> ५,००० Energy\n"
-        "📦 **Mega Booster:** 1.5 TON -> २०,००० Energy + २x बूस्टर\n"
-        "📦 **Whale Package:** 5.0 TON -> Unlimited Energy (२४ घण्टाका लागि)"
-    )
-    bot.answer_callback_query(call.id)
-    bot.send_message(call.message.chat.id, store_text, parse_mode='Markdown')
+        .logo-area {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
 
-print("बोट सुरु भयो...")
-bot.infinity_polling()
+        /* Stats Bar */
+        .stats-container {
+            width: 90%;
+            max-width: 450px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .stat-val {
+            font-weight: bold;
+            color: var(--neon-blue);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            background-color: #334155;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 12px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
+            transition: width 0.3s ease;
+        }
+
+        /* Slot Machine */
+        .slot-machine {
+            background: linear-gradient(180deg, #334155, #1e293b);
+            border: 4px solid var(--primary-color);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+            margin-bottom: 25px;
+        }
+
+        .slot-reel {
+            width: 80px;
+            height: 80px;
+            background: #0f172a;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        /* Action Buttons */
+        .spin-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #000;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+            transition: transform 0.1s, box-shadow 0.2s;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        .spin-btn:active {
+            transform: scale(0.95);
+        }
+
+        .spin-btn:disabled {
+            background: #64748b;
+            color: #94a3b8;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Shop Section */
+        .shop-section {
+            width: 90%;
+            max-width: 450px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--neon-pink);
+            border-radius: 15px;
+            padding: 15px;
+            box-sizing: border-box;
+            margin-bottom: 40px;
+        }
+
+        .shop-title {
+            text-align: center;
+            color: var(--neon-pink);
+            margin-top: 0;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .package-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .package-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .pack-info div {
+            font-weight: bold;
+        }
+        .pack-info span {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .buy-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .buy-btn:hover {
+            background: #059669;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .winning {
+            animation: bounce 0.3s ease infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">💎 TapNova Boinkers</div>
+        <!-- TON Wallet Connection Button UI Components inside here -->
+        <div id="ton-connect-button"></div>
+    </header>
+
+    <!-- Stats Section -->
+    <div class="stats-container">
+        <div class="stat-row">
+            <div>🪙 क्वाइन (Coins): <span id="coin-count" class="stat-val">15.1B</span></div>
+            <div>🎃 Level: <span id="level-count" class="stat-val" style="color: var(--neon-pink);">1/11</span></div>
+        </div>
+        <div class="stat-row">
+            <div>⚡ इनर्जी (Energy): <span id="energy-text">800/800</span></div>
+            <div id="status-msg" style="font-size:0.85rem; color:#10b981;">रेडी छ!</div>
+        </div>
+        <div class="progress-bar-bg">
+            <div id="energy-bar" class="progress-bar-fill"></div>
+        </div>
+    </div>
+
+    <!-- Slot Reels -->
+    <div class="slot-machine" id="machine">
+        <div class="slot-reel" id="reel1">🪙</div>
+        <div class="slot-reel" id="reel2">⚡</div>
+        <div class="slot-reel" id="reel3">🎃</div>
+    </div>
+
+    <!-- Main Game Spin Button -->
+    <button class="spin-btn" id="spin-trigger" onclick="playSlot()">SPIN</button>
+
+    <!-- TON In-App Energy Store -->
+    <div class="shop-section">
+        <h3 class="shop-title">🔋 TON मन्थली प्रिमियम स्टोर 🔋</h3>
+        <div class="package-list">
+            
+            <div class="package-card">
+                <div class="pack-info">
+                    <div>📦 Starter Booster Pack</div>
+                    <span>+५,००० Energy रिचार्ज</span>
+                </div>
+                <button class="buy-btn" onclick="purchaseEnergy(0.5)">0.5 TON</button>
+            </div>
+
+            <div class="package-card">
+                <div class="pack-info">
+                    <div>🔥 Halloween Special Pack</div>
+                    <span>+२०,००० Energy + २x बूस्ट</span>
+                </div>
+                <button class="buy-btn" onclick="purchaseEnergy(1.5)">1.5 TON</button>
+            </div>
+
+            <div class="package-card">
+                <div class="pack-info">
+                    <div>🐋 Whale Package (Mega)</div>
+                    <span>+८०,००० Energy + Exclusive Pet</span>
+                </div>
+                <button class="buy-btn" onclick="purchaseEnergy(5.0)">5.0 TON</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // गेम स्टेट डाटाहरू
+        let coins = 15100000000; 
+        let energy = 800;
+        const maxEnergy = 800;
+        const items = ['🪙', '⚡', '🎃', '🐷', '💥'];
+
+        // TON Connect UI इनिसियलाईज गर्ने
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://githubusercontent.com', // तपाईंको वास्तविक वेवसाइट म्यानिफेस्ट यूआरएलसँग पछि फेर्नुहोला
+            buttonRootId: 'ton-connect-button'
+        });
+
+        // स्क्रीन डाटाहरू अपडेट गर्ने फङ्सन
+        function updateDisplay() {
+            document.getElementById('coin-count').innerText = (coins / 1000000000).toFixed(1) + 'B';
+            document.getElementById('energy-text').innerText = `${energy}/${maxEnergy}`;
+            const percentage = (energy / maxEnergy) * 100;
+            document.getElementById('energy-bar').style.width = percentage + '%';
+
+            if(energy <= 0) {
+                document.getElementById('spin-trigger').disabled = true;
+                document.getElementById('status-msg').innerText = "इनर्जी सकियो! स्टोरबाट रिचार्ज गर्नुहोस्।";
+                document.getElementById('status-msg').style.color = "#ef4444";
+            } else {
+                document.getElementById('spin-trigger').disabled = false;
+                document.getElementById('status-msg').innerText = "खेल्न तयार छ!";
+                document.getElementById('status-msg').style.color = "#10b981";
+            }
+        }
+
+        // स्लट घुमाउने लजिक
+        function playSlot() {
+            if(energy < 50) {
+                alert("एउटा स्पिन गर्न कम्तिमा ५० इनर्जी चाहिन्छ!");
+                return;
+            }
+
+            energy -= 50;
+            document.getElementById('spin-trigger').disabled = true;
