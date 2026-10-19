@@ -4,24 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TapNova (TNV) - Boinkers Edition</title>
-    <!-- TON Connect UI Script -->
+    <!-- TON Connect UI SDK -->
     <script src="https://unpkg.com"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --primary-color: #f59e0b;
-            --neon-blue: #38bdf8;
-            --neon-pink: #ec4899;
-            --text-color: #ffffff;
+            --bg-dark: #070a13;
+            --panel-bg: rgba(19, 26, 48, 0.9);
+            --boinker-gold: #ffd700;
+            --boinker-orange: #ff6b00;
+            --neon-green: #00ff66;
+            --neon-pink: #ff007f;
+            --neon-blue: #00d2ff;
+            --text-light: #ffffff;
         }
 
         body {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            background: linear-gradient(135deg, #1e1b4b, #0f172a);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--text-color);
+            background: radial-gradient(circle at center, #1a103c 0%, #070a13 100%);
+            font-family: 'Impact', 'Segoe UI', sans-serif;
+            color: var(--text-light);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -29,10 +32,11 @@
             overflow-x: hidden;
         }
 
-        /* Top Header & Wallet Button */
+        /* Top Bar Layout */
         header {
             width: 100%;
-            max-width: 500px;
+            max-width: 480px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -40,274 +44,294 @@
             box-sizing: border-box;
         }
 
-        .logo-area {
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            border: 2px solid var(--boinker-gold);
+        }
+
+        .user-info div {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .user-info .username {
             font-weight: bold;
-            font-size: 1.2rem;
-            color: var(--primary-color);
-            text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+            color: var(--text-light);
         }
 
-        /* Stats Bar */
-        .stats-container {
-            width: 90%;
-            max-width: 450px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .stat-row {
+        /* Core Economy Panel */
+        .economy-bar {
+            width: 92%;
+            max-width: 440px;
+            background: var(--panel-bg);
+            border: 2px solid #2e3b64;
+            border-radius: 16px;
+            padding: 12px;
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
+            box-sizing: border-box;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            margin-bottom: 15px;
         }
 
-        .stat-val {
-            font-weight: bold;
-            color: var(--neon-blue);
-        }
-
-        .progress-bar-bg {
-            width: 100%;
-            background-color: #334155;
-            border-radius: 10px;
-            overflow: hidden;
-            height: 12px;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
-            transition: width 0.3s ease;
-        }
-
-        /* Slot Machine */
-        .slot-machine {
-            background: linear-gradient(180deg, #334155, #1e293b);
-            border: 4px solid var(--primary-color);
-            border-radius: 20px;
-            padding: 20px;
+        .eco-item {
             display: flex;
-            gap: 15px;
-            box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
-            margin-bottom: 25px;
+            align-items: center;
+            gap: 6px;
+            font-size: 1.1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
         }
 
-        .slot-reel {
-            width: 80px;
-            height: 80px;
-            background: #0f172a;
-            border-radius: 10px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
+        .eco-icon { font-size: 1.4rem; }
+        .eco-val { color: var(--boinker-gold); font-weight: bold; }
+
+        /* Game Main View Container */
+        .main-container {
+            width: 92%;
+            max-width: 440px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        /* Boinkers Live Slot Machine Container */
+        .boinker-box {
+            width: 100%;
+            background: linear-gradient(180deg, #ffd700 0%, #cc9900 100%);
+            border: 4px solid #502000;
+            border-radius: 24px;
+            padding: 15px;
+            box-sizing: border-box;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3), inset 0 4px 10px rgba(255,255,255,0.5);
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .boinker-header {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #502000;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+        }
+
+        .slot-window {
+            background: #200800;
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            border: 4px solid #803000;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+        }
+
+        .reel {
+            width: 85px;
+            height: 85px;
+            background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
+            border-radius: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2.2rem;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            font-size: 2.8rem;
+            box-shadow: 0 6px 0 #94a3b8, inset 0 0 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
         }
 
-        /* Action Buttons */
-        .spin-btn {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #000;
-            border: none;
-            padding: 15px 50px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
-            transition: transform 0.1s, box-shadow 0.2s;
-            text-transform: uppercase;
-            margin-bottom: 30px;
-        }
-
-        .spin-btn:active {
-            transform: scale(0.95);
-        }
-
-        .spin-btn:disabled {
-            background: #64748b;
-            color: #94a3b8;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
-
-        /* Shop Section */
-        .shop-section {
-            width: 90%;
-            max-width: 450px;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--neon-pink);
-            border-radius: 15px;
-            padding: 15px;
+        /* Energy Tracker Widget */
+        .energy-widget {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 10px;
             box-sizing: border-box;
-            margin-bottom: 40px;
-        }
-
-        .shop-title {
-            text-align: center;
-            color: var(--neon-pink);
-            margin-top: 0;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-        }
-
-        .package-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .package-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255,255,255,0.03);
-            padding: 12px;
-            border-radius: 10px;
+            margin-bottom: 15px;
             border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .pack-info div {
-            font-weight: bold;
-        }
-        .pack-info span {
-            font-size: 0.8rem;
-            color: #94a3b8;
+        .energy-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
         }
 
-        .buy-btn {
-            background: #10b981;
+        .energy-bar-container {
+            width: 100%;
+            height: 16px;
+            background: #1e293b;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid #334155;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .energy-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #00ff66 0%, #00bcff 100%);
+            box-shadow: 0 0 10px rgba(0,255,102,0.7);
+            transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Spin Action Controls */
+        .spin-control-btn {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #ff4500 0%, #b30000 100%);
+            border: 6px solid var(--boinker-gold);
+            border-radius: 50%;
+            color: white;
+            font-size: 1.6rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(236, 72, 153, 0.4), inset 0 4px 10px rgba(255,255,255,0.4);
+            transition: transform 0.1s, box-shadow 0.2s;
+            text-transform: uppercase;
+            outline: none;
+            margin-bottom: 20px;
+        }
+
+        .spin-control-btn:active {
+            transform: scale(0.92);
+            box-shadow: 0 4px 10px rgba(236, 72, 153, 0.2);
+        }
+
+        .spin-control-btn:disabled {
+            background: linear-gradient(135deg, #475569 0%, #334155 100%);
+            border-color: #64748b;
+            color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Tabs Interface for Premium Upgrades */
+        .navigation-tabs {
+            width: 100%;
+            display: flex;
+            background: #111827;
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #1f2937;
+        }
+
+        .tab-trigger {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .tab-trigger.active {
+            background: var(--panel-bg);
+            color: var(--neon-blue);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Dynamic Showcase Sections */
+        .content-panel {
+            width: 100%;
+            background: var(--panel-bg);
+            border-radius: 16px;
+            border: 1px solid #1e293b;
+            padding: 15px;
+            box-sizing: border-box;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .content-panel.active { display: block; }
+
+        .section-header {
+            font-size: 1.2rem;
+            color: var(--boinker-gold);
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 6px;
+        }
+
+        /* Modified Package Grid Cards */
+        .card-item {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+
+        .card-item:hover {
+            border-color: var(--neon-blue);
+        }
+
+        .card-details div { font-weight: bold; font-size: 1rem; color: #fff;}
+        .card-details span { font-size: 0.8rem; color: #94a3b8; }
+        .badge-premium {
+            background: var(--neon-pink);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
+
+        .action-purchase-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             border: none;
-            padding: 8px 15px;
+            padding: 10px 16px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
-            transition: background 0.2s;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
         }
 
-        .buy-btn:hover {
+        .action-purchase-btn:hover {
             background: #059669;
         }
 
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-        .winning {
-            animation: bounce 0.3s ease infinite;
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <div class="logo-area">💎 TapNova Boinkers</div>
-        <!-- TON Wallet Connection Button UI Components inside here -->
-        <div id="ton-connect-button"></div>
-    </header>
-
-    <!-- Stats Section -->
-    <div class="stats-container">
-        <div class="stat-row">
-            <div>🪙 क्वाइन (Coins): <span id="coin-count" class="stat-val">15.1B</span></div>
-            <div>🎃 Level: <span id="level-count" class="stat-val" style="color: var(--neon-pink);">1/11</span></div>
-        </div>
-        <div class="stat-row">
-            <div>⚡ इनर्जी (Energy): <span id="energy-text">800/800</span></div>
-            <div id="status-msg" style="font-size:0.85rem; color:#10b981;">रेडी छ!</div>
-        </div>
-        <div class="progress-bar-bg">
-            <div id="energy-bar" class="progress-bar-fill"></div>
-        </div>
-    </div>
-
-    <!-- Slot Reels -->
-    <div class="slot-machine" id="machine">
-        <div class="slot-reel" id="reel1">🪙</div>
-        <div class="slot-reel" id="reel2">⚡</div>
-        <div class="slot-reel" id="reel3">🎃</div>
-    </div>
-
-    <!-- Main Game Spin Button -->
-    <button class="spin-btn" id="spin-trigger" onclick="playSlot()">SPIN</button>
-
-    <!-- TON In-App Energy Store -->
-    <div class="shop-section">
-        <h3 class="shop-title">🔋 TON मन्थली प्रिमियम स्टोर 🔋</h3>
-        <div class="package-list">
-            
-            <div class="package-card">
-                <div class="pack-info">
-                    <div>📦 Starter Booster Pack</div>
-                    <span>+५,००० Energy रिचार्ज</span>
-                </div>
-                <button class="buy-btn" onclick="purchaseEnergy(0.5)">0.5 TON</button>
-            </div>
-
-            <div class="package-card">
-                <div class="pack-info">
-                    <div>🔥 Halloween Special Pack</div>
-                    <span>+२०,००० Energy + २x बूस्ट</span>
-                </div>
-                <button class="buy-btn" onclick="purchaseEnergy(1.5)">1.5 TON</button>
-            </div>
-
-            <div class="package-card">
-                <div class="pack-info">
-                    <div>🐋 Whale Package (Mega)</div>
-                    <span>+८०,००० Energy + Exclusive Pet</span>
-                </div>
-                <button class="buy-btn" onclick="purchaseEnergy(5.0)">5.0 TON</button>
-            </div>
-
-        </div>
-    </div>
-
-    <script>
-        // गेम स्टेट डाटाहरू
-        let coins = 15100000000; 
-        let energy = 800;
-        const maxEnergy = 800;
-        const items = ['🪙', '⚡', '🎃', '🐷', '💥'];
-
-        // TON Connect UI इनिसियलाईज गर्ने
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://githubusercontent.com', // तपाईंको वास्तविक वेवसाइट म्यानिफेस्ट यूआरएलसँग पछि फेर्नुहोला
-            buttonRootId: 'ton-connect-button'
-        });
-
-        // स्क्रीन डाटाहरू अपडेट गर्ने फङ्सन
-        function updateDisplay() {
-            document.getElementById('coin-count').innerText = (coins / 1000000000).toFixed(1) + 'B';
-            document.getElementById('energy-text').innerText = `${energy}/${maxEnergy}`;
-            const percentage = (energy / maxEnergy) * 100;
-            document.getElementById('energy-bar').style.width = percentage + '%';
-
-            if(energy <= 0) {
-                document.getElementById('spin-trigger').disabled = true;
-                document.getElementById('status-msg').innerText = "इनर्जी सकियो! स्टोरबाट रिचार्ज गर्नुहोस्।";
-                document.getElementById('status-msg').style.color = "#ef4444";
-            } else {
-                document.getElementById('spin-trigger').disabled = false;
-                document.getElementById('status-msg').innerText = "खेल्न तयार छ!";
-                document.getElementById('status-msg').style.color = "#10b981";
-            }
+        /* Album Grid Style */
+        .album-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
         }
 
-        // स्लट घुमाउने लजिक
-        function playSlot() {
-            if(energy < 50) {
-                alert("एउटा स्पिन गर्न कम्तिमा ५० इनर्जी चाहिन्छ!");
-                return;
-            }
-
-            energy -= 50;
-            document.getElementById('spin-trigger').disabled = true;
+        .sticker-slot {
+            background: #0f172a;
+            border: 2px dashed #334155;
+            border-radius: 8px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            position: relative;
+        }
