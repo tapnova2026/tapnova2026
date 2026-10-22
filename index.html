@@ -212,8 +212,68 @@ async function lootBox() {
     toast(e.message || 'Loot Box खोल्न सकिएन।');
   }
 }
-async function spin(){const btn=$('spinBtn');try{requireBackend();btn.disabled=true;const r=await api('/api/game/spin',{});const prize=r.prize||{};const symbols=Array.isArray(prize.symbols)?prize.symbols:['🎁','⚡','🌙'];document.querySelectorAll('.reel').forEach((el,i)=>{el.textContent=symbols[i]||'🎁';el.classList.remove('spin')});$('lastResult').textContent=(prize.prize_name||prize.name||prize.prize_type||'Reward')+' · '+fmt(prize.prize_value||0);applyServerPlayer(r.player);toast('This feature is currently unavailable. Please try again.');}catch(e){document.querySelectorAll('.reel').forEach(r=>r.classList.remove('spin'));toast(e.message||'This feature is currently unavailable. Please try again.')}finally{btn.disabled=false;}}
-async function wheel(){await spin();if($('wheelResult'))$('wheelResult').textContent=$('lastResult')?.textContent||'This feature is currently unavailable. Please try again.';}
+
+async function spin() {
+  const btn = $('spinBtn');
+
+  try {
+    requireBackend();
+
+    if (btn) btn.disabled = true;
+
+    const r = await api('/api/game/spin', {});
+    const prize = r.prize || {};
+
+    const symbols = Array.isArray(prize.symbols)
+      ? prize.symbols
+      : ['🎁', '⚡', '🌙'];
+
+    document.querySelectorAll('.reel').forEach((el, i) => {
+      el.textContent = symbols[i] || '🎁';
+      el.classList.remove('spin');
+    });
+
+    $('lastResult').textContent =
+      (prize.prize_name || prize.name || prize.prize_type || 'Reward')
+      + ' · ' + fmt(prize.prize_value || 0);
+
+    applyServerPlayer(r.player);
+
+    toast('Spin successful! Reward: ' +
+      (prize.prize_name || prize.name || prize.prize_type || 'Reward'));
+
+    return r;
+
+  } catch (e) {
+    document.querySelectorAll('.reel').forEach(el => {
+      el.classList.remove('spin');
+    });
+
+    toast(e.message || 'Spin failed. Please try again.');
+    throw e;
+
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+
+async function wheel() {
+  const result = $('wheelResult');
+
+  try {
+    await spin();
+
+    if (result) {
+      result.textContent = $('lastResult')?.textContent || 'Spin completed';
+    }
+  } catch (e) {
+    if (result) {
+      result.textContent = e.message || 'Spin failed. Please try again.';
+    }
+  }
+}
+
 function shopTab(kind,el){state.shop=kind;document.querySelectorAll('#shop .tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderShop()}
 const packs={energy:[['🔋','Starter Pack','100 Energy','0.10 TON',100],['⚡','Explorer Pack','300 Energy','0.25 TON',300],['🔋','Captain Pack','700 Energy','0.50 TON',700],['📦','Commander Pack','1,600 Energy','1.00 TON',1600],['🎁','Galaxy Pack','4,500 Energy','2.50 TON',4500],['💎','Universe Pack','10,000 Energy','5.00 TON',10000]],boost:[['🚀','Double Boost','2× for 1 hour','0.10 TON',2],['🌟','Triple Boost','3× for 3 hours','0.25 TON',3],['💫','Super Boost','5× for 6 hours','0.50 TON',5],['🪐','Ultra Boost','10× for 24 hours','1.00 TON',10]],season:[['🎁','Moon Rush Chest','Season loot chest','500 Energy',500],['🌙','Moon Explorer Skin','Limited season cosmetic','1,000 Energy',1000],['🏅','Season Badge','Moon Rush profile badge','2,500 Energy',2500]]};
 const paymentPackageIds={energy:['energy_010','energy_025','energy_050','energy_100','energy_250','energy_500'],boost:['boost_2x_1h','boost_3x_3h','boost_5x_6h','boost_10x_24h']};
