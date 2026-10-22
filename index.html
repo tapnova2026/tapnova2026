@@ -188,7 +188,30 @@ function switchTab(tab){document.querySelectorAll('.screen').forEach(s=>s.classL
 async function tapMoon(){try{requireBackend();$('tapButton').disabled=true;const r=await api('/api/game/tap',{count:1});applyServerPlayer(r.player);$('astronaut').style.transform='translate(-42px,10px) scale(1.06)';setTimeout(()=>$('astronaut').style.transform='translate(-42px,20px)',120);const f=document.createElement('div');f.className='tapfloat';f.textContent='+'+fmt(r.earned||1);f.style.left=(30+Math.random()*45)+'%';f.style.top='34%';$('tapzone').appendChild(f);setTimeout(()=>f.remove(),800);}catch(e){toast(e.message||'Tap could not be saved.')}finally{$('tapButton').disabled=false;}}
 async function dailyReward(){try{requireBackend();const r=await api('/api/reward/daily',{});applyServerPlayer(r.player);toast('Daily reward saved by the server.')}catch(e){toast(e.message||'Daily reward is unavailable.')}}
 async function freeEnergy(){try{requireBackend();const r=await api('/api/energy/free',{});applyServerPlayer(r.player);toast('Energy updated by the server.')}catch(e){toast(e.message||'Free Energy is unavailable.')}}
-function lootBox(){toast('The API request failed. Check the Worker URL, network connection, and server response.');}
+async function lootBox() {
+  try {
+    requireBackend();
+    const r = await api('/api/game/lootbox', {});
+    if (r.player) applyServerPlayer(r.player);
+    if (r.stickers_count !== undefined) {
+      state.stickers = Number(r.stickers_count);
+    }
+    update();
+
+    const reward = r.reward || {};
+    const label = reward.type === 'tnv'
+      ? `+${reward.value} TNV`
+      : reward.type === 'energy'
+        ? `+${reward.value} Energy`
+        : reward.type === 'sticker'
+          ? 'Moon Rush Sticker प्राप्त भयो!'
+          : 'पुरस्कार प्राप्त भयो';
+
+    toast(`Loot Box: ${label}`);
+  } catch (e) {
+    toast(e.message || 'Loot Box खोल्न सकिएन।');
+  }
+}
 async function spin(){const btn=$('spinBtn');try{requireBackend();btn.disabled=true;const r=await api('/api/game/spin',{});const prize=r.prize||{};const symbols=Array.isArray(prize.symbols)?prize.symbols:['🎁','⚡','🌙'];document.querySelectorAll('.reel').forEach((el,i)=>{el.textContent=symbols[i]||'🎁';el.classList.remove('spin')});$('lastResult').textContent=(prize.prize_name||prize.name||prize.prize_type||'Reward')+' · '+fmt(prize.prize_value||0);applyServerPlayer(r.player);toast('This feature is currently unavailable. Please try again.');}catch(e){document.querySelectorAll('.reel').forEach(r=>r.classList.remove('spin'));toast(e.message||'This feature is currently unavailable. Please try again.')}finally{btn.disabled=false;}}
 async function wheel(){await spin();if($('wheelResult'))$('wheelResult').textContent=$('lastResult')?.textContent||'This feature is currently unavailable. Please try again.';}
 function shopTab(kind,el){state.shop=kind;document.querySelectorAll('#shop .tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderShop()}
