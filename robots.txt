@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tapnova2026.github.io/tapnova2026/sitemap.xml
