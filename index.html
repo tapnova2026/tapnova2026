@@ -33,11 +33,80 @@
  <div class="notice">Open this shop inside the Telegram Mini App to purchase with TON. Include the unique code supplied by the server in the transaction memo/comment. Rewards are granted only after the server verifies the transaction hash.</div>
 </section>
 <section class="screen" id="album">
- <div class="hero"><div class="hero-emoji">🪐</div><div class="eyebrow">Season 01</div><h2>MOON RUSH ALBUM</h2><p>Collect all 90 stickers and unlock season rewards.</p><div class="row between" style="margin-top:10px"><span id="stickerCount">12 / 90 collected</span><span>🎁</span></div><div class="progress"><span id="albumProgress" style="width:13%"></span></div></div>
- <div class="tabs"><button class="tab active" onclick="albumTab('stickers',this)">Stickers</button><button class="tab" onclick="albumTab('characters',this)">Characters</button><button class="tab" onclick="albumTab('wheel',this)">Wheel</button></div>
- <div id="albumStickers"><div class="albumgrid" id="stickerGrid"></div><div class="card"><h3>🏆 Complete set rewards</h3><div class="row between"><span>🪙 5M TNV</span><span>⚡ 500 Energy</span><span>🎖️ Special badge</span></div></div></div>
- <div id="albumCharacters" class="hidden"><div class="albumgrid" id="characterGrid"></div></div>
- <div id="albumWheel" class="hidden"><div class="card" style="text-align:center;padding:20px"><div id="wheelVisual" style="font-size:100px;filter:drop-shadow(0 0 15px #48dfff)">🎡</div><h2>Wheel of Fortune</h2><p class="sub">A daily demo spin with randomized in-game points.</p><button class="primary" onclick="wheel()">SPIN THE WHEEL</button><p id="wheelResult" class="reward"></p></div></div>
+  <div class="hero">
+    <div class="hero-emoji">🪐</div>
+    <div class="eyebrow">Season 01</div>
+    <h2>MOON RUSH ALBUM</h2>
+    <p>Collect all 90 stickers and unlock season rewards.</p>
+
+    <div class="row between" style="margin-top:10px">
+      <span id="stickerCount">0 / 90 collected</span>
+      <span>🎁</span>
+    </div>
+
+    <div class="progress">
+      <span id="albumProgress" style="width:0%"></span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active"
+      onclick="albumTab('stickers',this)">Stickers</button>
+    <button class="tab"
+      onclick="albumTab('characters',this)">Characters</button>
+    <button class="tab"
+      onclick="albumTab('wheel',this)">Wheel</button>
+  </div>
+
+  <div id="albumStickers">
+    <div class="card">
+      <div class="row between">
+        <div class="grow">
+          <h3>🎁 Sticker Pack</h3>
+          <p class="sub">Open a pack to collect a sticker.</p>
+        </div>
+        <button class="primary" id="openStickerPackBtn"
+          onclick="openStickerPack()">OPEN PACK</button>
+      </div>
+    </div>
+
+    <div id="collectionList"></div>
+    <div class="albumgrid" id="stickerGrid"></div>
+
+    <div class="card">
+      <h3>🏆 Complete Set Rewards</h3>
+      <div class="row between">
+        <span>⚡ 500 Energy</span>
+        <span>🎖️ Special badge</span>
+      </div>
+      <p class="sub">
+        Complete a collection to qualify for its reward.
+      </p>
+    </div>
+  </div>
+
+  <div id="albumCharacters" class="hidden">
+    <div class="albumgrid" id="characterGrid"></div>
+  </div>
+
+  <div id="albumWheel" class="hidden">
+    <div class="card"
+      style="text-align:center;padding:20px">
+      <div id="wheelVisual"
+        style="font-size:100px;filter:drop-shadow(0 0 15px #48dfff)">
+        🎡
+      </div>
+      <h2>Wheel of Fortune</h2>
+      <p class="sub">
+        A daily demo spin with randomized in-game points.
+      </p>
+      <button class="primary" onclick="wheel()">
+        SPIN THE WHEEL
+      </button>
+      <p id="wheelResult" class="reward"></p>
+    </div>
+  </div>
+</section>
 </section>
 <section class="screen" id="missions">
  <div class="hero"><div class="hero-emoji">🏆</div><div class="eyebrow">Season 01</div><h2>MISSIONS & EVENTS</h2><p>Complete challenges, earn points, and grow your crew.</p></div>
