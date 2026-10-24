@@ -73,7 +73,29 @@ const TAPNOVA_API_BASE = 'https://tapnova-api.verikarnalicollege.workers.dev';
 const PROJECT_WALLET = 'UQAbrZTySlI0f0km5LJkGfSndWhCOchOJfa9PPAhiyQdb9lF';
 function telegramApp(){return window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;}
 function telegramInitData(tg){return tg && typeof tg.initData==='string' ? tg.initData.trim() : '';}
+async function loadTelegramSdk(){
+ if(telegramApp())return true;
+ const urls=[
+  'https://telegram.org/js/telegram-web-app.js',
+  'https://telegram.org/js/telegram-web-app.js?tapnova=1'
+ ];
+ for(const src of urls){
+  const loaded=await new Promise(resolve=>{
+   const script=document.createElement('script');
+   let finished=false;
+   const done=value=>{if(finished)return;finished=true;clearTimeout(timer);script.onload=null;script.onerror=null;resolve(value);};
+   const timer=setTimeout(()=>done(!!telegramApp()),5000);
+   script.src=src;script.async=true;
+   script.onload=()=>done(!!telegramApp());
+   script.onerror=()=>done(false);
+   document.head.appendChild(script);
+  });
+  if(loaded||telegramApp())return true;
+ }
+ return !!telegramApp();
+}
 async function requireTelegram(timeoutMs=15000){
+ if(!telegramApp())await loadTelegramSdk();
  const started=Date.now();
  while(Date.now()-started<timeoutMs){
   const tg=telegramApp();
@@ -84,8 +106,8 @@ async function requireTelegram(timeoutMs=15000){
   }
   await new Promise(resolve=>setTimeout(resolve,250));
  }
- if(!telegramApp())throw new Error('Telegram WebApp SDK load भएन। @TapNovaEarnBot को Open App बाट फेरि खोल्नुहोस्।');
- throw new Error('Telegram initData खाली छ। BotFather मा Main Mini App/Web App launch configuration जाँच्नुहोस्।');
+ if(!telegramApp())throw new Error('Telegram SDK load भएन। App को Launch URL Telegram को Open App बाट खुलेको छ कि जाँच्नुहोस्; network मा telegram.org script अवरुद्ध हुन सक्छ।');
+ throw new Error('Telegram SDK चलेको छ तर initData खाली छ। BotFather मा Main Mini App/Web App URL configuration जाँच्नुहोस्।');
 }
 async function api(path, body={}){
  const {initData}=await requireTelegram();
